@@ -1,0 +1,75 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description" "{{ template.description }}",
+
+{% for parameter in template.parameters %}
+    {% if loop.first -%} "Parameters": { {% endif %}
+        "{{ parameter.name }}": {
+            "Type": "{{ parameter.type }}",
+            {%- if parameter.default is defined -%}
+            "Default": "{{ parameter.default }}",
+            {%- endif %}
+            {% if parameter.noEcho is defined -%}
+            "NoEcho": "{{ parameter.noEcho }}",
+            {%- endif -%}
+            {%- if parameter.allowedValues is defined -%}
+            "AllowedValues": "{{ parameter.allowedValues }}",
+            {%- endif -%}
+            {%- if parameter.allowedPattern is defined -%}
+            "AllowedPattern": "{{ parameter.allowedPattern }}",
+            {%- endif -%}
+            {% if parameter.maxLength is defined -%}
+            "MaxLength": "{{ parameter.maxLength }}",
+            {%- endif -%}
+            {%- if parameter.minValue is defined -%}
+            "MinValue": "{{ parameter.minValue }}",
+            {%- endif -%}
+            {% if parameter.maxValue is defined -%}
+            "MaxValue": "{{ parameter.maxValue }}",
+            {%- endif -%}
+            {%- if parameter.constraintDescription is defined -%}
+            "ConstraintDescription": "{{ parameter.constraintDescriptoin }}",
+            {%- endif -%}
+            "Description": "{{ parameter.description }}"
+        }{% if loop.last %}
+    },
+    {% endif %}
+{% endfor %}
+
+{% for mapping in template.mappings %}
+    {% if loop.first -%} "Mappings": { {% endif %}
+        "{{ mapping.key }}" : {{ mapping.value }}{% if loop.last %},{% endif %}
+    {% if loop.last %}
+    },
+    {% endif %}
+{% endfor %}
+
+{% for resource in template.resources %}
+    {% if loop.first %} "Resources": { {% endif %}
+        "{{ resource.logicalname }}": {
+            "Type":"{{ resource.type }}",
+            "Retain" : "{{ resource.deletionPolicy }}",
+            "Properties": {
+                {% for property in resource.properties %}
+                    "{{ property.name }}": {{ property.value }}{% if not loop.last %},{% endif %}
+                {% endfor %}
+            }
+        }
+        {% if not loop.last %}
+        ,
+        {% endif %}
+    {% if loop.last %}
+    },
+    {% endif %}
+{% endfor %}
+
+{% for output in template.outputs %}
+    {% if loop.first %} "Outputs": { {% endif %}
+        "{{ output.name }}": {
+            "Description": "{{ output.description }}",
+            "Value": "{{ output.value }}"
+        }{% if not loop.last %},{% endif %}
+    {% if loop.last %} } {% endif %}
+{% endfor %}
+}
