@@ -1,6 +1,6 @@
 # a-cloudformer
 
-## pre-requirements
-python >= 2.6.x
-jinja2
+boto==2.6.0
 
+## LICENCE
+Please see LICENSE
