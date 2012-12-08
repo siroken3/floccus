@@ -2,12 +2,14 @@ class CfnAWSResource:
     def __init__(self, name):
         self.name = name
 
+    def __str__(self):
+        return self.typestring
+
 class CfnVpc(CfnAWSResource):
     typestring = 'AWS::EC2::VPC'
 
     def __init__(self, vpc):
         self.vpc = vpc
-        pass
 
 class CfnSubnet(CfnAWSResource):
     typestring = 'AWS::EC2::Subnet'

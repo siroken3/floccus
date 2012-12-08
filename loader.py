@@ -3,36 +3,57 @@
 import boto
 import boto.ec2
 import boto.vpc
+import argparse
 
 from models import *
 
-class CloudParser:
-    def __init__(self, region_name, vpc_id):
-        self.region_name = region_name
+class CloudFormer:
+    def __init__(self, access_key, secret_key, vpc_id, region_name='us-east-1'):
+        self.access_key = access_key if access_key is not None else ''
+        self.secret_key = secret_key if secret_key is not None else ''
+        self.region = boto.ec2.get_region(
+            region_name,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
         self.vpc_filter = ('vpc-id', vpc_id)
 
-    def walk(self):
-        self.region = boto.ec2.get_region(self.region_name)
-        self.vpcconn = boto.connect_vpc(region=self.region)
+    def form(self):
+        self.vpcconn = boto.connect_vpc(
+            region=self.region,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
         parse_context = {}
-        self._walk_vpc(parse_context)
-        self._walk_subnets(parse_context)
-        self._walk_route_tables(parse_context)
+        self._form_vpc(parse_context)
+        self._form_subnets(parse_context)
+        self._form_route_tables(parse_context)
         return parse_context
 
-    def _walk_vpc(self, parse_context):
-        parse_context['vpc'] = CfnVpc(self.vpcconn.get_all_vpcs(filters=[self.vpc_filter])[0])
+    def _form_vpc(self, parse_context):
+        vpcs = self.vpcconn.get_all_vpcs(filters=[self.vpc_filter])
+        parse_context['vpc'] = str(CfnVpc(vpcs[0]))
 
-    def _walk_subnets(self, parse_context):
-        parse_context['subnets'] = [CfnSubnet(s) for s in self.vpcconn.get_all_subnets(filters=[self.vpc_filter])]
+    def _form_subnets(self, parse_context):
+        parse_context['subnets'] = [str(CfnSubnet(s)) for s
+                                    in self.vpcconn.get_all_subnets(
+                filters=[self.vpc_filter],
+                )]
 
-    def _walk_route_table(self, parse_context):
+    def _form_route_tables(self, parse_context):
         rtbs = [CfnRouteTable(rtb) for rtb in self.vpcconn.get_all_route_tables(filters=[self.vpc_filter])]
-        parse_context['route_tables'] = rtbs
-        assocs = [rtb.associations for rtb in rtbs]
-        parse_context['subnet_route_table_associations'] = [CfnSubnetRouteTableAssociation(x) for x in assocs]
+        parse_context['route_tables'] = [str(rtb) for rtb in rtbs]
+#        assocs = [rtb.associations for rtb in rtbs]
+#        parse_context['subnet_route_table_associations'] = [CfnSubnetRouteTableAssociation(x) for x in assocs]
 
 if __name__ == '__main__':
-    import sys
-    parser = CloudParser(sys.argv[0], sys.argv[1])
-    print parser.walk()
+    import os
+    parser = argparse.ArgumentParser()
+    parser.add_argument('vpcid')
+    parser.add_argument('-O','--aws-access-key')
+    parser.add_argument('-W','--aws-secret-key')
+    parsed = parser.parse_args()
+    access_key = parsed.aws_access_key if parsed.aws_access_key is not None else os.environ.get('AWS_ACCESS_KEY')
+    secret_key = parsed.aws_secret_key if parsed.aws_secret_key is not None else os.environ.get('AWS_SECRET_KEY')
+    former = CloudFormer(vpc_id=parsed.vpcid, access_key=access_key, secret_key=secret_key)
+    print former.form()
