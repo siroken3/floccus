@@ -19,16 +19,17 @@ class CfnSubnet(CfnAWSResource):
 
 class CfnRouteTable(CfnAWSResource):
     typestring = 'AWS::EC2::RouteTable'
-
-    def __init__(self, vpc):
-        self.vpc = vpc
+    def __init__(self, route_table):
+        self.route_table = route_table
+        self.associations = route_table.associations
 
 
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
     typestring = 'AWS::EC2::SubnetRouteTableAssociation'
 
-    def __init__(self, route_table, subnet):
-        self.route_table = route_table
-        self.subnet = subnet
+    def __init__(self, route_table_association):
+        self.route_table_association = route_table_association
+        self.route_table_id = route_table_association.route_table_id
+        self.subnet_id = route_table_association.subnet_id
 
 

@@ -28,23 +28,31 @@ class CloudFormer:
         self._form_vpc(parse_context)
         self._form_subnets(parse_context)
         self._form_route_tables(parse_context)
+        self._form_subnet_route_table_association(parse_context)
         return parse_context
 
     def _form_vpc(self, parse_context):
         vpcs = self.vpcconn.get_all_vpcs(filters=[self.vpc_filter])
-        parse_context['vpc'] = str(CfnVpc(vpcs[0]))
+        parse_context['vpc'] = CfnVpc(vpcs[0])
 
     def _form_subnets(self, parse_context):
-        parse_context['subnets'] = [str(CfnSubnet(s)) for s
+        parse_context['subnets'] = [CfnSubnet(s) for s
                                     in self.vpcconn.get_all_subnets(
-                filters=[self.vpc_filter],
+                filters=[self.vpc_filter]
                 )]
 
     def _form_route_tables(self, parse_context):
-        rtbs = [CfnRouteTable(rtb) for rtb in self.vpcconn.get_all_route_tables(filters=[self.vpc_filter])]
-        parse_context['route_tables'] = [str(rtb) for rtb in rtbs]
-#        assocs = [rtb.associations for rtb in rtbs]
-#        parse_context['subnet_route_table_associations'] = [CfnSubnetRouteTableAssociation(x) for x in assocs]
+        parse_context['route_tables'] = [CfnRouteTable(rtb) for rtb
+                                         in self.vpcconn.get_all_route_tables(
+                filters=[self.vpc_filter]
+                )]
+
+    def _form_subnet_route_table_association(self, parse_context):
+        route_tables = parse_context['route_tables']
+        associations = []
+        for route_table in route_tables:
+            associations.extend([CfnSubnetRouteTableAssociation(assoc) for assoc in route_table.associations])
+        parse_context['subnet_route_table_association'] = associations
 
 if __name__ == '__main__':
     import os
