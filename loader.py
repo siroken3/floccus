@@ -64,4 +64,4 @@ if __name__ == '__main__':
     access_key = parsed.aws_access_key if parsed.aws_access_key is not None else os.environ.get('AWS_ACCESS_KEY')
     secret_key = parsed.aws_secret_key if parsed.aws_secret_key is not None else os.environ.get('AWS_SECRET_KEY')
     former = CloudFormer(vpc_id=parsed.vpcid, access_key=access_key, secret_key=secret_key)
-    print former.form()
+    print [(k, str(v)) for k, v in former.form().items()]
