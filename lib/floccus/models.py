@@ -11,6 +11,19 @@ class CfnVpc(CfnAWSResource):
     def __init__(self, vpc):
         self.value = vpc
 
+class CfnInternetGateWay(CfnAWSResource):
+    typestring = 'AWS::EC2::InternetGateway'
+
+    def __init__(self, internet_gateway):
+        self.value = internet_gateway
+
+class CfnVpcGatewayAttachment(CfnAWSResource):
+    typestring = 'AWS::EC2::VPCGatewayAttachment'
+
+    def __init__(self, attachment, gateway):
+        self.value = attachment
+        self.gateway = gateway
+
 class CfnSubnet(CfnAWSResource):
     typestring = 'AWS::EC2::Subnet'
 

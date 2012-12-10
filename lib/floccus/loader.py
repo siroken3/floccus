@@ -17,6 +17,7 @@ class CloudFormer:
             aws_secret_access_key=self.secret_key
             )
         self.vpc_filter = ('vpc-id', vpc_id)
+        self.vpc_attachment_filter = ('attachment.vpc-id', vpc_id)
 
     def form(self):
         self.vpcconn = boto.connect_vpc(
@@ -26,6 +27,8 @@ class CloudFormer:
             )
         parse_context = {}
         self._form_vpc(parse_context)
+        self._form_internet_gateway(parse_context)
+        self._form_gateway_attachments(parse_context)
         self._form_subnets(parse_context)
         self._form_route_tables(parse_context)
         self._form_subnet_route_table_association(parse_context)
@@ -34,6 +37,19 @@ class CloudFormer:
     def _form_vpc(self, parse_context):
         vpcs = self.vpcconn.get_all_vpcs(filters=[self.vpc_filter])
         parse_context['vpc'] = CfnVpc(vpcs[0])
+
+    def _form_internet_gateway(self, parse_context):
+        parse_context['internet_gateways'] = [CfnInternetGateWay(igw) for igw
+                                              in self.vpcconn.get_all_internet_gateways(
+                filters=[self.vpc_attachment_filter]
+                )]
+
+    def _form_gateway_attachments(self, parse_context):
+        internet_gateways = parse_context['internet_gateways']
+        attachments = []
+        for internet_gateway in internet_gateways:
+            attachments.extend([CfnVpcGatewayAttachment(att, internet_gateway) for att in internet_gateway.value.attachments])
+        parse_context['gateway_attachments'] = attachments
 
     def _form_subnets(self, parse_context):
         parse_context['subnets'] = [CfnSubnet(s) for s
