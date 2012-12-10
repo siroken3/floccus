@@ -39,7 +39,7 @@
         "{{ route_table.value.id | replace('-','') }}" : {
             "Type" : "{{ route_table.typestring }}",
             "Properties" : {
-                "VpcId" : "{{ route_table.value.vpc_id | replace('-','') }}"
+                "VpcId" : { "Ref" : "{{ route_table.value.vpc_id | replace('-','') }}" }
             }
         },
 {% endfor -%}
@@ -49,10 +49,11 @@
             "Type" : "{{ subnet_route_table_association.typestring }}",
             "Properties" : {
                 "RouteTableId" : { "Ref" : "{{ subnet_route_table_association.value.route_table_id | replace('-','') }}" },
-                "SubnetId" : "{{ subnet_route_table_association.value.subnet_id | replace('-','') }}"
+                "SubnetId" : { "Ref" : "{{ subnet_route_table_association.value.subnet_id | replace('-','') }}" }
             }
-        }{% if not loop.last %},{% endif %}
+        }
+{% if not loop.last %},{% endif %}
 {% endif %}
-{% endfor -%}
+{% endfor %}
     }
 }
