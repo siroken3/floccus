@@ -5,10 +5,10 @@ AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していない�
 ## 動作環境
 Linux/MacOS 10以降で動作します。また必要なライブラリは以下のとおりです。
 
-python>=2.6
-boto==2.6.0
-Jinja2==2.6
-argparse>=1.2.1 (python 2.7以降は不要です)
+* python>=2.6
+* boto==2.6.0
+* Jinja2==2.6
+* argparse>=1.2.1 (python 2.7以降は不要です)
 
 ## インストール
 
