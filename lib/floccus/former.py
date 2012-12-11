@@ -31,6 +31,7 @@ class CloudFormer:
         self._form_gateway_attachments(parse_context)
         self._form_subnets(parse_context)
         self._form_route_tables(parse_context)
+        self._form_route(parse_context)
         self._form_subnet_route_table_association(parse_context)
         return parse_context
 
@@ -62,6 +63,13 @@ class CloudFormer:
                                          in self.vpcconn.get_all_route_tables(
                 filters=[self.vpc_filter]
                 )]
+
+    def _form_route(self, parse_context):
+        route_tables = parse_context['route_tables']
+        routes = []
+        for route_table in route_tables:
+            routes.extend([CfnRoute(route, route_table) for route in route_table.value.routes])
+        parse_context['routes'] = routes
 
     def _form_subnet_route_table_association(self, parse_context):
         route_tables = parse_context['route_tables']

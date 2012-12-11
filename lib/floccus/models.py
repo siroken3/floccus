@@ -36,12 +36,6 @@ class CfnRouteTable(CfnAWSResource):
     def __init__(self, route_table):
         self.value = route_table
 
-class CfnRoute(CfnAWSResource):
-    typestring = 'AWS::EC2::Route'
-
-    def __init__(self, route):
-        self.value = route
-
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
     typestring = 'AWS::EC2::SubnetRouteTableAssociation'
 
@@ -51,6 +45,6 @@ class CfnSubnetRouteTableAssociation(CfnAWSResource):
 class CfnRoute(CfnAWSResource):
     typestring = 'AWS::EC2::Route'
 
-    def __init__(self, route):
+    def __init__(self, route, route_table):
         self.value = route
-
+        self.route_table = route_table

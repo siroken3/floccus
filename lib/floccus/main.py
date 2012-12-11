@@ -3,8 +3,8 @@
 import os
 import sys
 import argparse
-
 from jinja2 import Environment, PackageLoader
+
 from former import CloudFormer
 import utils
 

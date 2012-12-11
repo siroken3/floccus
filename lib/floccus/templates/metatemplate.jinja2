@@ -64,16 +64,29 @@
 {% endif %}
 {% if not loop.last %},{% endif %}
 {% endfor %}
+{% for instance in model.instances %}
+        "{{instance.id | replace('-','')}}" : {
+            "Type" : "{{ instance.typestring }}",
+            "Properties" : {
+            }
+        }
+{% endfor %}
 {% for route in model.routes %}
 {% if loop.first %},{% endif %}
-        "": {
+        "{{ (route.route_table.value.id + route.value.destination_cidr_block) | replace('/','') | replace('.','') | replace('-','') }}": {
             "Type" : "{{ route.typestring }}",
             "Properties" : {
-                "DestinationCidrBlock" : "",
-                "GatewayId" : "",
-                "InstanceId" : "",
-                "NetworkInterfaceId" : "",
-                "RouteTableId" : ""
+                "DestinationCidrBlock" : "{{ route.value.destination_cidr_block }}"
+                ,"RouteTableId" : { "Ref" : "{{ route.route_table.value.id | replace('-','') }}" }
+{% if route.value.gateway_id is not none %}
+                ,"GatewayId" : { "Ref" : "{{ route.value.gateway_id | replace('-','') }}" }
+{% endif %}
+{% if route.value.instance_id is not none %}
+                ,"InstanceId" : { "Ref" : "{{ route.value.instance_id | replace('-','') }}" }
+{% endif %}
+{% if route.value.networkinterface_id is defined %}
+                ,"NetworkInterfaceId" : { "Ref" : "{{ route.value.networkinterface_id | replace('-','') }}" }
+{% endif %}
             }
         }
 {% if not loop.last %},{% endif %}
