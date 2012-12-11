@@ -10,22 +10,27 @@
                 "CidrBlock" : "{{ model.vpc.value.cidr_block }}",
                 "InstanceTenancy" : "{{ model.vpc.value.instanceTenancy }}"
             }
-        },
+        }
 {% for gateway in model.internet_gateways %}
+{% if loop.first %},{% endif %}
         "{{ gateway.value.id | replace('-','') }}" : {
            "Type" : "{{ gateway.typestring }}"
-        },
+        }
+{% if not loop.last %},{% endif %}
 {% endfor %}
 {% for attachment in model.gateway_attachments %}
+{% if loop.first %},{% endif %}
         "{{ (attachment.value.vpc_id + attachment.gateway.value.id) | replace('-','') }}" : {
            "Type" : "{{ attachment.typestring }}",
            "Properties" : {
                "VpcId" : { "Ref" : "{{ attachment.value.vpc_id | replace('-','') }}" },
                "InternetGatewayId" : { "Ref" : "{{ attachment.gateway.value.id | replace('-','') }}" }
            }
-        },
+        }
+{% if not loop.last %},{% endif %}
 {% endfor %}
 {% for subnet in model.subnets %}
+{% if loop.first %},{% endif %}
         "{{ subnet.value.id | replace('-','') }}" : {
             "Type" : "{{ subnet.typestring }}",
             "Properties" : {
@@ -33,18 +38,22 @@
                 "CidrBlock" : "{{ subnet.value.cidr_block }}",
                 "VpcId" : { "Ref" : "{{ subnet.value.vpc_id | replace('-','') }}" }
             }
-        },
-{% endfor -%}
+        }
+{% if not loop.last %},{% endif %}
+{% endfor %}
 {% for route_table in model.route_tables %}
+{% if loop.first %},{% endif %}
         "{{ route_table.value.id | replace('-','') }}" : {
             "Type" : "{{ route_table.typestring }}",
             "Properties" : {
                 "VpcId" : { "Ref" : "{{ route_table.value.vpc_id | replace('-','') }}" }
             }
-        },
-{% endfor -%}
+        }
+{% if not loop.last %},{% endif %}
+{% endfor %}
 {% for subnet_route_table_association in model.subnet_route_table_associations %}
 {% if not subnet_route_table_association.value.main %}
+{% if loop.first %},{% endif %}
         "{{subnet_route_table_association.value.id | replace('-','')}}" : {
             "Type" : "{{ subnet_route_table_association.typestring }}",
             "Properties" : {
@@ -52,8 +61,22 @@
                 "SubnetId" : { "Ref" : "{{ subnet_route_table_association.value.subnet_id | replace('-','') }}" }
             }
         }
-{% if not loop.last %},{% endif %}
 {% endif %}
+{% if not loop.last %},{% endif %}
+{% endfor %}
+{% for route in model.routes %}
+{% if loop.first %},{% endif %}
+        "": {
+            "Type" : "{{ route.typestring }}",
+            "Properties" : {
+                "DestinationCidrBlock" : "",
+                "GatewayId" : "",
+                "InstanceId" : "",
+                "NetworkInterfaceId" : "",
+                "RouteTableId" : ""
+            }
+        }
+{% if not loop.last %},{% endif %}
 {% endfor %}
     }
 }
