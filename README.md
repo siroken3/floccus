@@ -12,7 +12,7 @@ argparse>=1.2.1 (python 2.7以降は不要です)
 
 ## インストール
 
-必要なライブラリをインストールするためのdistributeとpipのインストールします。
+まず必要なライブラリをインストールするためのdistribute(easy_install) と pipをインストールします。distributeでもインストール可能なはずですが アンインストールできるとか pip を気に入っているのでご紹介します。
 
     $ curl -O http://python-distribute.org/distribute_setup.py
     $ python distribute_setup.py
