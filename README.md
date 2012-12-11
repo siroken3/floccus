@@ -29,7 +29,7 @@ argparse>=1.2.1 (python 2.7以降は不要です)
     $ export FLOCCUS_HOME=インストール先DIRECTORY
     $ git clone https://github.com/siroken3/floccus.git ${FLOCCUS_HOME}
 
-${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので binに$PATHを通してください。
+${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bin に$PATHを通してください。なおFLOCCUS_HOME環境変数は説明のために入れていますので必要ではありません。
 
 ## 使い方
 
