@@ -1,38 +1,72 @@
 # -*- coding:utf-8 -*-
 
-from jinja2 import Environment, PackageLoader
+import boto
+import boto.ec2
+import boto.vpc
+import argparse
 
-import sys
+from models import *
 
-sys.path.insert(0, '..')
+class CloudFormer:
+    def __init__(self, access_key, secret_key, vpc_id, region_name='us-east-1'):
+        self.access_key = access_key if access_key is not None else ''
+        self.secret_key = secret_key if secret_key is not None else ''
+        self.region = boto.ec2.get_region(
+            region_name,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
+        self.vpc_filter = ('vpc-id', vpc_id)
+        self.vpc_attachment_filter = ('attachment.vpc-id', vpc_id)
 
-env = Environment(loader=PackageLoader(__name__, 'metatemplate'))
-metatemplate = env.get_template('metatemplate.jinja2')
+    def form(self):
+        self.vpcconn = boto.connect_vpc(
+            region=self.region,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
+        parse_context = {}
+        self._form_vpc(parse_context)
+        self._form_internet_gateway(parse_context)
+        self._form_gateway_attachments(parse_context)
+        self._form_subnets(parse_context)
+        self._form_route_tables(parse_context)
+        self._form_subnet_route_table_association(parse_context)
+        return parse_context
 
-template = {
-    'version':'2010-09-10',
-    'description':'hello',
-    'parameters': [
-        {'name': 'aaa'},
-        {'name': 'bbb'},
-    ],
-    'mappings': [
-        {'key': 'key1', 'value': 'value1'},
-    ],
-    'resources': {
-        'resource_1': {
-            'Type': '',
-            'Properties': {
-                }
-            },
-        'resource_2': {
-            'Type': '',
-            'Properties': {
-                }
-            }
-    },
-    'outputs': [
-    ],
-}
+    def _form_vpc(self, parse_context):
+        vpcs = self.vpcconn.get_all_vpcs(filters=[self.vpc_filter])
+        parse_context['vpc'] = CfnVpc(vpcs[0])
 
-print metatemplate.render(template=template);
+    def _form_internet_gateway(self, parse_context):
+        parse_context['internet_gateways'] = [CfnInternetGateWay(igw) for igw
+                                              in self.vpcconn.get_all_internet_gateways(
+                filters=[self.vpc_attachment_filter]
+                )]
+
+    def _form_gateway_attachments(self, parse_context):
+        internet_gateways = parse_context['internet_gateways']
+        attachments = []
+        for internet_gateway in internet_gateways:
+            attachments.extend([CfnVpcGatewayAttachment(att, internet_gateway) for att in internet_gateway.value.attachments])
+        parse_context['gateway_attachments'] = attachments
+
+    def _form_subnets(self, parse_context):
+        parse_context['subnets'] = [CfnSubnet(s) for s
+                                    in self.vpcconn.get_all_subnets(
+                filters=[self.vpc_filter]
+                )]
+
+    def _form_route_tables(self, parse_context):
+        parse_context['route_tables'] = [CfnRouteTable(rtb) for rtb
+                                         in self.vpcconn.get_all_route_tables(
+                filters=[self.vpc_filter]
+                )]
+
+    def _form_subnet_route_table_association(self, parse_context):
+        route_tables = parse_context['route_tables']
+        associations = []
+        for route_table in route_tables:
+            associations.extend([CfnSubnetRouteTableAssociation(assoc) for assoc in route_table.value.associations])
+        parse_context['subnet_route_table_associations'] = associations
+
