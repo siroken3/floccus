@@ -1,6 +1,6 @@
 # floccus
 
-AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していないので代替として動作するツールです。VPCIDを指定すると標準出力にCloudFormationのJSONファイルを出力します。
+AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していないので代替として動作するCLIツールです。VPCIDを指定すると標準出力にCloudFormationのJSONファイルを出力します。
 
 ## 動作環境
 Linux/MacOS 10以降で動作します。また必要なライブラリは以下のとおりです。
