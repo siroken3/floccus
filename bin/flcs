@@ -2,5 +2,8 @@
 
 import sys
 sys.path.insert(0, sys.path[0] + '/../lib')
-import floccus.main
+from floccus import main
+
+main.main()
+
 

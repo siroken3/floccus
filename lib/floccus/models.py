@@ -1,9 +1,11 @@
+# -*- coding:utf-8 -*-
+
 class CfnAWSResource:
-    def __init__(self, value):
-        self.__value = value
+    def __init__(self, botoobj):
+        self.__botoobj = botoobj
 
     def __getattr__(self, name):
-        return getattr(self.__value, name)
+        return getattr(self.__botoobj, name)
 
 class CfnVpc(CfnAWSResource):
     def __init__(self, vpc):
