@@ -12,7 +12,7 @@ Linux/MacOS 10以降で動作します。また必要なライブラリは以下
 
 ## インストール
 
-まず必要なライブラリをインストールするためのdistribute(easy_install) と pipをインストールします。distributeでもインストール可能なはずですが アンインストールできるとか pip を気に入っているのでご紹介します。
+まず必要なライブラリをインストールするためのdistribute(easy_install) と pipをインストールします。distributeでもインストール可能なはずですが pip を気に入っているのでここではpipによる方法で説明します。
 
     $ curl -O http://python-distribute.org/distribute_setup.py
     $ python distribute_setup.py
@@ -29,7 +29,7 @@ Linux/MacOS 10以降で動作します。また必要なライブラリは以下
     $ export FLOCCUS_HOME=インストール先DIRECTORY
     $ git clone https://github.com/siroken3/floccus.git ${FLOCCUS_HOME}
 
-${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bin に$PATHを通してください。なおFLOCCUS_HOME環境変数は説明のために入れていますので必要ではありません。
+${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bin に$PATHを通してください。なおFLOCCUS_HOME環境変数は説明のために入れていますので必須ではありません。
 
 ## 使い方
 
