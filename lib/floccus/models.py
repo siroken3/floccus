@@ -35,6 +35,16 @@ class CfnSubnetRouteTableAssociation(CfnAWSResource):
 class CfnEC2Instance(CfnAWSResource):
     def __init__(self, instance):
         CfnAWSResource.__init__(self, instance)
+        self._set_name_from_tag()
+
+    def _set_name_from_tag(self):
+        for key,value in self.tags.items():
+            if key == 'Name':
+                self.tag_name = value
+                break
+
+    def logical_id(self):
+        return self.tag_name
 
 class CfnRoute(CfnAWSResource):
     def __init__(self, route, route_table):

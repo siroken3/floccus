@@ -51,7 +51,7 @@
         },
 {% endfor %}
 {% for instance in model.instances %}
-        "{{ instance.id | replace('-','') }}" : {
+        "{{ instance.logical_id() }}" : {
             "Type" : "AWS::EC2::Instance",
             "Properties" : {
                 "AvailabilityZone" : "{{ instance.placement }}",
@@ -63,6 +63,10 @@
                 "PrivateIpAddress" : "{{ instance.private_ip_address }}",
                 "SourceDestCheck" : "{{ instance.get_attribute('sourceDestCheck').sourceDestCheck }}",
                 "SubnetId" : { "Ref" : "{{ instance.subnet_id | replace('-','') }}" },
+                "Tags" : [{% for key,value in instance.tags.items() %}
+"{{ key }}": "{{ value }}"{% if not loop.last %}, {% endif %}
+{% endfor %}
+],
                 "Tenancy" : "{{ instance.placement_tenancy }}"
             }
         },
