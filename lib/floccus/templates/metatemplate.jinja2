@@ -1,8 +1,8 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "This is auto generated cloudformation file.",
+    "Description": "This is auto generated cloudformation file. VPC:{{ model.vpc.id }}",
     "Resources": {
-        "{{ model.vpc.id | replace('-','') }}" : {
+        "{{ model.vpc.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::VPC",
             "Properties" : {
                 "CidrBlock" : "{{ model.vpc.cidr_block }}",
@@ -10,48 +10,54 @@
             }
         },
 {% for gateway in model.internet_gateways %}
-        "{{ gateway.id | replace('-','') }}" : {
+        "{{ gateway.cfn_resource_name() }}" : {
            "Type" : "AWS::EC2::InternetGateway"
         },
 {% endfor %}
 {% for attachment in model.gateway_attachments %}
-        "{{ (attachment.vpc_id + attachment.gateway.id) | replace('-','') }}" : {
+        "{{ attachment.cfn_resource_name() }}" : {
            "Type" : "AWS::EC2::VPCGatewayAttachment",
            "Properties" : {
-               "VpcId" : { "Ref" : "{{ attachment.vpc_id | replace('-','') }}" },
-               "InternetGatewayId" : { "Ref" : "{{ attachment.gateway.id | replace('-','') }}" }
+               "VpcId" : { "Ref" : "{{ attachment.vpc.cfn_resource_name() }}" },
+               "InternetGatewayId" : { "Ref" : "{{ attachment.gateway.cfn_resource_name() }}" }
            }
         },
 {% endfor %}
 {% for subnet in model.subnets %}
-        "{{ subnet.id | replace('-','') }}" : {
+        "{{ subnet.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::Subnet",
             "Properties" : {
                 "AvailabilityZone" : "{{ subnet.availability_zone }}",
                 "CidrBlock" : "{{ subnet.cidr_block }}",
-                "VpcId" : { "Ref" : "{{ subnet.vpc_id | replace('-','') }}" }
+                "VpcId" : { "Ref" : "{{ subnet.vpc.cfn_resource_name() }}" }
             }
         },
 {% endfor %}
 {% for route_table in model.route_tables %}
-        "{{ route_table.id | replace('-','') }}" : {
+        "{{ route_table.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::RouteTable",
             "Properties" : {
-                "VpcId" : { "Ref" : "{{ route_table.vpc_id | replace('-','') }}" }
+                "VpcId" : { "Ref" : "{{ route_table.vpc.cfn_resource_name() }}" }
+{% for key,value in route_table.tags.items() %}
+                {% if loop.first %} "Tags" : [ {% endif %}
+"{{ key }}": "{{ value }}"{% if not loop.last %}, {% endif %}
+{% if loop.last %}]{% endif %}
+{% endfor %}
             }
         },
 {% endfor %}
-{% for subnet_route_table_association in model.subnet_route_table_associations if not subnet_route_table_association.main %}
-        "{{ subnet_route_table_association.id | replace('-','') }}" : {
+
+{% for subnet_route_table_association in model.subnet_route_table_associations %}
+        "{{ subnet_route_table_association.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::SubnetRouteTableAssociation",
             "Properties" : {
-                "RouteTableId" : { "Ref" : "{{ subnet_route_table_association.route_table_id | replace('-','') }}" },
-                "SubnetId" : { "Ref" : "{{ subnet_route_table_association.subnet_id | replace('-','') }}" }
+                "RouteTableId" : { "Ref" : "{{ subnet_route_table_association.route_table.cfn_resource_name() }}" },
+                "SubnetId" : { "Ref" : "{{ subnet_route_table_association.subnet.cfn_resource_name() }}" }
             }
         },
 {% endfor %}
 {% for instance in model.instances %}
-        "{{ instance.logical_id() }}" : {
+        "{{ instance.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::Instance",
             "Properties" : {
                 "AvailabilityZone" : "{{ instance.placement }}",
@@ -62,33 +68,29 @@
                 "Monitoring" : "{{ instance.monitored }}",
                 "PrivateIpAddress" : "{{ instance.private_ip_address }}",
                 "SourceDestCheck" : "{{ instance.get_attribute('sourceDestCheck').sourceDestCheck }}",
-                "SubnetId" : { "Ref" : "{{ instance.subnet_id | replace('-','') }}" },
-                "Tags" : [{% for key,value in instance.tags.items() %}
-"{{ key }}": "{{ value }}"{% if not loop.last %}, {% endif %}
-{% endfor %}
-],
+                "SubnetId" : { "Ref" : "{{ instance.subnet.cfn_resource_name() }}" },
+{% for key,value in instance.tags.items() %}
+{% if loop.first %}
+                "Tags" : [{% endif %}"{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
+{% if loop.last %}],{% endif %}{% endfor %}
+
                 "Tenancy" : "{{ instance.placement_tenancy }}"
             }
         },
 {% endfor %}
-{% for route in model.routes if route.gateway_id != 'local' %}
-        "{{ (route.route_table.id + route.destination_cidr_block) | replace('-','') | replace('/','') | replace('.','') }}": {
+{% for route in model.routes if route.gateway.id != 'local' %}
+        "{{ route.cfn_resource_name() }}": {
             "Type" : "AWS::EC2::Route",
             "Properties" : {
-                "DestinationCidrBlock" : "{{ route.destination_cidr_block }}"
-                ,"RouteTableId" : { "Ref" : "{{ route.route_table.id | replace('-','') }}" }
-{% if route.gateway_id is not none %}
-                ,"GatewayId" : { "Ref" : "{{ route.gateway_id | replace('-','') }}" }
-{% endif %}
-{% if route.instance_id is not none %}
-                ,"InstanceId" : { "Ref" : "{{ route.instance_id | replace('-','') }}" }
-{% endif %}
-{% if route.networkinterface_id is defined %}
-                ,"NetworkInterfaceId" : { "Ref" : "{{ route.networkinterface_id | replace('-','') }}" }
-{% endif %}
+                "DestinationCidrBlock" : "{{ route.destination_cidr_block }}",
+                "RouteTableId" : { "Ref" : "{{ route.route_table.cfn_resource_name() }}" }{% if route.gateway is not none %},
+                "GatewayId" : { "Ref" : "{{ route.gateway.cfn_resource_name() }}" }{% endif %}{% if route.instance is not none %},
+                "InstanceId" : { "Ref" : "{{ route.instance.cfn_resource_name() }}" }{% endif %}{% if route.networkinterface is defined %},
+                "NetworkInterfaceId" : { "Ref" : "{{ route.networkinterface.cfn_resource_name() }}" }{% endif %}
+
             }
-        }
-{% if not loop.last %},{% endif %}
+        }{% if not loop.last %},{% endif %}
+
 {% endfor %}
     }
 }

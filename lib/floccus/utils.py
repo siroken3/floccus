@@ -5,7 +5,7 @@ import os
 def get_aws_key(access_key=None, secret_key=None):
     if access_key is None:
         if os.environ.get('AWS_ACCESS_KEY') is None:
-            aws_access_key = ''
+            aws_access_key = None
         else:
             aws_access_key = os.environ.get('AWS_ACCESS_KEY')
     else:
@@ -13,7 +13,7 @@ def get_aws_key(access_key=None, secret_key=None):
 
     if secret_key is None:
         if os.environ.get('AWS_SECRET_KEY') is None:
-            aws_secret_key = ''
+            aws_secret_key = None
         else:
             aws_secret_key = os.environ.get('AWS_SECRET_KEY')
     else:
