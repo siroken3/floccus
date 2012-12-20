@@ -1,6 +1,6 @@
 # floccus
 
-AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していないので代替として動作するCLIツールです。VPCIDを指定すると標準出力にCloudFormationのJSONファイルを出力します。
+AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していないので代替として動作するCLIツールです。regionを指定すると標準出力にCloudFormationのJSONファイルを出力します。
 
 ## 動作環境
 Linux/MacOS 10以降で動作します。また必要なライブラリは以下のとおりです。
@@ -33,11 +33,11 @@ ${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bi
 
 ## 使い方
 
-環境変数 AWS_ACCESS_KEY, AWS_SECRET_KEY へEC2でDescribeできる権限のアクセスキー、シークレットキーを設定してCloudFormationのJSONを出力したいVPCのIDを指定します。
+環境変数 AWS_ACCESS_KEY, AWS_SECRET_KEY へEC2でDescribeできる権限のアクセスキー、シークレットキーを設定し、CloudFormationのJSONを出力したいリージョンを指定します。
 
     $ export AWS_ACCESS_KEY=アクセスキー
     $ export AWS_SECRET_KEY=シークレットキー
-    $ flcs VPCID
+    $ flcs REGION
     {
         "AWSTemplateFormatVersion": "2010-09-09",
         "Description": "This is auto generated cloudformation file.",
@@ -46,20 +46,16 @@ ${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bi
 
 アクセスキー、シークレットキーは引数で指定することもできます。
 
-    $ flcs --aws-access-key アクセスキー --aws-secret-key シークレットキー VPCID
+    $ flcs --aws-access-key アクセスキー --aws-secret-key シークレットキー
 
-対象のVPCが us-east-1 以外のリージョンに存在する場合は --region 引数で指定する必要があります。
+us-east-1 以外のリージョンを使用する場合は引数で指定できます
 
-    $ flcs --region 'ap-northeast-1' VPCID
+    $ flcs --region 'ap-northeast-1'
 
 --help で簡単なヘルプを見ることができます。
 
     bin/flcs --help
     usage: flcs [-h] [-O AWS_ACCESS_KEY] [-W AWS_SECRET_KEY] [--region REGION]
-                vpcid
-    
-    positional arguments:
-      vpcid
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -69,7 +65,6 @@ ${FLOCCUS_HOME} 以下に bin/ と lib/ ができますので ${FLOCCUS_HOME}/bi
 
 ## TODO
 * 一部のResourceにしか対応していないので拡充
-* Tagへの対応
 * cloudformerのようなWebアプリケーション化
 
 ## LICENCE

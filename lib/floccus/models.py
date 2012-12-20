@@ -29,7 +29,7 @@ class CfnTaggedResource(CfnAWSResource):
             return self.tag_name
 
     def default_cfn_resource_name(self):
-        return None
+        return (self.id).replace('-','')
 
 class CfnVpc(CfnAWSResource):
     def __init__(self, vpc):
@@ -46,7 +46,7 @@ class CfnVpcGatewayAttachment(CfnAWSResource):
         self.gateway = cfn_gateway
 
     def cfn_resource_name(self):
-        return self.vpc.cfn_resource_name() + self.gateway.cfn_resource_name() + "GateWayAttachment"
+        return self.vpc.cfn_resource_name() + self.gateway.cfn_resource_name() + "GatewayAttachment"
 
 class CfnSubnet(CfnAWSResource):
     def __init__(self, subnet, cfn_vpc):
@@ -60,9 +60,6 @@ class CfnRouteTable(CfnTaggedResource):
     def __init__(self, route_table, cfn_vpc):
         CfnTaggedResource.__init__(self, route_table)
         self.vpc = cfn_vpc
-
-    def default_cfn_resource_name(self):
-        return (self.id).replace('-','')
 
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
     def __init__(self, route_table_association, cfn_route_table, cfn_subnet):
@@ -85,7 +82,3 @@ class CfnEC2Instance(CfnTaggedResource):
     def __init__(self, instance, cfn_subnet):
         CfnTaggedResource.__init__(self, instance)
         self.subnet = cfn_subnet
-
-    def default_cfn_resource_name(self):
-        return (self.id).replace('-','')
-

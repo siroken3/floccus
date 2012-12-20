@@ -1,14 +1,17 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "This is auto generated cloudformation file. VPC:{{ model.vpc.id }}",
+    "Description": "This is auto generated cloudformation file.",
     "Resources": {
-        "{{ model.vpc.cfn_resource_name() }}" : {
+
+{% for vpc in model.vpcs %}
+        "{{ vpc.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::VPC",
             "Properties" : {
-                "CidrBlock" : "{{ model.vpc.cidr_block }}",
-                "InstanceTenancy" : "{{ model.vpc.instanceTenancy }}"
+                "CidrBlock" : "{{ vpc.cidr_block }}",
+                "InstanceTenancy" : "{{ vpc.instanceTenancy }}"
             }
         },
+{% endfor %}
 {% for gateway in model.internet_gateways %}
         "{{ gateway.cfn_resource_name() }}" : {
            "Type" : "AWS::EC2::InternetGateway"

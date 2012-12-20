@@ -8,7 +8,7 @@ import argparse
 from models import *
 
 class CloudFormer:
-    def __init__(self, access_key, secret_key, vpc_id, region_name='us-east-1'):
+    def __init__(self, access_key, secret_key, region_name='us-east-1'):
         self.access_key = access_key if access_key is not None else ''
         self.secret_key = secret_key if secret_key is not None else ''
         self.region = boto.ec2.get_region(
@@ -16,7 +16,6 @@ class CloudFormer:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key
             )
-        self.vpc_id = vpc_id
 
     def form(self):
         self.vpcconn = boto.connect_vpc(
@@ -25,33 +24,33 @@ class CloudFormer:
             aws_secret_access_key=self.secret_key
             )
         context = {}
-        self._form_vpc(context)
-        self._form_internet_gateway(context)
-        self._form_gateway_attachments(context)
-        self._form_subnets(context)
-        self._form_instances(context)
-        self._form_route_tables(context)
-        self._form_route(context)
-        self._form_subnet_route_table_association(context)
+        vpcs = self._form_vpc(context)
+        for vpc in vpcs:
+            internet_gateways = self._form_internet_gateway(context, vpc)
+            subnets           = self._form_subnets(context, vpc)
+            instances         = self._form_instances(context, vpc, subnets)
+            route_tables      = self._form_route_tables(context, vpc)
+            self._form_gateway_attachments(context, vpc, internet_gateways)
+            self._form_route(context, route_tables, internet_gateways, instances)
+            self._form_subnet_route_table_association(context, route_tables, subnets)
         return context
 
     def _form_vpc(self, context):
-        vpcs = self.vpcconn.get_all_vpcs(
-            filters=[('vpc-id', self.vpc_id)]
-            )
-        context['vpc'] = CfnVpc(vpcs[0])
+        vpcs = [CfnVpc(vpc) for vpc in self.vpcconn.get_all_vpcs()]
+        context['vpcs'] = vpcs
+        return vpcs
 
-    def _form_internet_gateway(self, context):
-        context['internet_gateways'] = [
+    def _form_internet_gateway(self, context, vpc):
+        internet_gateways = [
             CfnInternetGateWay(igw)
             for igw in self.vpcconn.get_all_internet_gateways(
-                filters=[('attachment.vpc-id',self.vpc_id)]
+                filters=[('attachment.vpc-id', vpc.id)]
                 )
             ]
+        context['internet_gateways'] = internet_gateways
+        return internet_gateways
 
-    def _form_gateway_attachments(self, context):
-        vpc               = context['vpc']
-        internet_gateways = context['internet_gateways'] if 'internet_gateways' in context else []
+    def _form_gateway_attachments(self, context, vpc, internet_gateways):
         attachments       = []
         for internet_gateway in internet_gateways:
             attachments.extend([
@@ -59,28 +58,29 @@ class CloudFormer:
                     for att in internet_gateway.attachments
                     ])
         context['gateway_attachments'] = attachments
+        return attachments
 
-    def _form_subnets(self, context):
-        vpc                = context['vpc']
-        context['subnets'] = [
+    def _form_subnets(self, context, vpc):
+        subnets = [
             CfnSubnet(s, vpc)
             for s in self.vpcconn.get_all_subnets(
                 filters=[('vpc-id', vpc.id)]
                 )
             ]
+        context['subnets'] = subnets
+        return subnets
 
-    def _form_route_tables(self, context):
-        vpc                     = context['vpc']
-        context['route_tables'] = [
+    def _form_route_tables(self, context, vpc):
+        route_tables = [
             CfnRouteTable(rtb, cfn_vpc=vpc)
             for rtb in self.vpcconn.get_all_route_tables(
                 filters=[('vpc-id', vpc.id)]
                 )
             ]
+        context['route_tables'] = route_tables
+        return route_tables
 
-    def _form_instances(self, context):
-        vpc       = context['vpc']
-        subnets   = context['subnets'] if 'subnets' in context else []
+    def _form_instances(self, context, vpc, subnets):
         instances = []
         for reservation in self.vpcconn.get_all_instances(filters={'vpc-id': vpc.id}):
             for instance in reservation.instances:
@@ -90,15 +90,12 @@ class CloudFormer:
                             if subnet.id == instance.subnet_id
                         ])
         context['instances'] = instances
+        return instances
 
-    def _form_route(self, context):
-        route_tables       = context['route_tables'] if 'route_tables' in context else []
-        gateways           = context['internet_gateways'] if 'internet_gateways' in context else []
-        instances          = context['instances'] if 'instances' in context else []
-        network_interfaces = context['network_interfaces'] if 'network_interfaces' in context else []
+    def _form_route(self, context, route_tables=[], internet_gateways=[], instances=[], network_interfaces=[]):
         routes             = []
         for route_table in route_tables:
-            for gateway in gateways:
+            for gateway in internet_gateways:
                 routes.extend([
                         CfnRoute(route, cfn_route_table=route_table, cfn_gateway=gateway)
                         for route in route_table.routes
@@ -117,10 +114,9 @@ class CloudFormer:
                         if network_interfaces.id == route.network_interface_id
                         ])
         context['routes'] = routes
+        return routes
 
-    def _form_subnet_route_table_association(self, context):
-        route_tables = context['route_tables']
-        subnets      = context['subnets']
+    def _form_subnet_route_table_association(self, context, route_tables, subnets):
         associations = []
         for subnet in subnets:
             for route_table in route_tables:
@@ -130,4 +126,4 @@ class CloudFormer:
                         if assoc.subnet_id == subnet.id
                         ])
         context['subnet_route_table_associations'] = associations
-
+        return associations
