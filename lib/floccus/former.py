@@ -28,6 +28,7 @@ class CloudFormer:
         for vpc in vpcs:
             internet_gateways = self._form_internet_gateway(context, vpc)
             subnets           = self._form_subnets(context, vpc)
+            security_groups = self._form_security_groups(context, vpc)
             instances         = self._form_instances(context, vpc, subnets)
             route_tables      = self._form_route_tables(context, vpc)
             self._form_gateway_attachments(context, vpc, internet_gateways)
@@ -69,6 +70,15 @@ class CloudFormer:
             ]
         context['subnets'] = subnets
         return subnets
+
+    def _form_security_groups(self, context, vpc):
+        security_groups = [
+            CfnSecurityGroup(sg, vpc)
+            for sg in self.vpcconn.get_all_security_groups()
+            if sg.vpc_id == vpc.id
+            ]
+        context['security_groups'] = security_groups
+        return security_groups
 
     def _form_route_tables(self, context, vpc):
         route_tables = [

@@ -36,6 +36,25 @@
             }
         },
 {% endfor %}
+{% for security_group in model.security_groups %}
+        "{{ security_group.cfn_resource_name() }}" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : {{ security_group.description }},
+                "SecurityGroupIngress" : [{% for ingress in security_group.rules %}{
+                    "IpProtocol" : "{{ ingress.ip_protocol }}",
+                    "FromPort" : "{{ ingress.from_port }}",
+                    "ToPort" : "{{ ingress.to_port }}",
+                    "CidrIp" : "{{ ingress.grants }}"
+                }{% if not loop.last %},{% endif %}{% endfor %}]
+                "SecurityGroupEgress" : [{% for egress in security_group.rules_egress %}{
+                    "IpProtocol" : "{{ egress.ip_protocol }}",
+                    "FromPort" : "{{ egress.from_port }}",
+                    "ToPort" : "{{ egress.to_port }}",
+                    "CidrIp" : "{{ egress.grants }}"
+                 }{% if not loop.last %},{% endif %}{% endfor %}]}
+        },
+{% endfor %}
 {% for route_table in model.route_tables %}
         "{{ route_table.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::RouteTable",

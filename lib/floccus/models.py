@@ -56,6 +56,14 @@ class CfnSubnet(CfnAWSResource):
     def cfn_resource_name(self):
         return self.vpc.cfn_resource_name() + self.cidr_block.replace('.','').replace('/','') + "Subnet"
 
+class CfnSecurityGroup(CfnAWSResource):
+    def __init__(self, security_group, cfn_vpc):
+        CfnAWSResource.__init__(self, security_group)
+        self.vpc = cfn_vpc
+
+    def cfn_resource_name(self):
+        return self.vpc.cfn_resource_name() + self.name.replace('-','') + "SecurityGroup"
+
 class CfnRouteTable(CfnTaggedResource):
     def __init__(self, route_table, cfn_vpc):
         CfnTaggedResource.__init__(self, route_table)
