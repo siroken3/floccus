@@ -40,19 +40,57 @@
         "{{ security_group.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties" : {
-                "GroupDescription" : {{ security_group.description }},
-                "SecurityGroupIngress" : [{% for ingress in security_group.rules %}{
+                "GroupDescription" : "{{ security_group.description }}"
+{% for ingress in security_group.rules %}
+{% if loop.first %}
+               ,"SecurityGroupIngress" : [{% endif %}{
                     "IpProtocol" : "{{ ingress.ip_protocol }}",
-                    "FromPort" : "{{ ingress.from_port }}",
-                    "ToPort" : "{{ ingress.to_port }}",
-                    "CidrIp" : "{{ ingress.grants }}"
-                }{% if not loop.last %},{% endif %}{% endfor %}]
-                "SecurityGroupEgress" : [{% for egress in security_group.rules_egress %}{
+{% for grant in ingress.grants %}
+{% if grant.cidr_ip is not none %}
+                    "CidrIp" : "{{ grant.cidr_ip }}",
+{% endif %}
+{% if grant.group_id is not none %}
+                    "SourceSecurityGroupName" : "{{ grant.group_id }}",
+{% endif %}
+{% if grant.groupId is not none %}
+                    "SourceSecurityGroupId" : "{{ grant.groupId }}",
+{% endif %}
+{% if grant.owner_id is not none %}
+                    "SourceSecurityGroupOwnerId" : "{{ grant.owner_id }}",
+{% endif %}
+{% endfor %}
+                    "FromPort" : "{{ ingress.from_port if ingress.from_port is not none else 0 }}",
+                    "ToPort" : "{{ ingress.to_port if ingress.to_port is not none else 65536 }}"
+                }{% if not loop.last %},{% endif %}{% if loop.last %}]{% endif %}
+{% endfor %}
+{% for egress in security_group.rules_egress %}
+{% if loop.first %}
+
+                ,"SecurityGroupEgress" : [{
+{% endif %}
                     "IpProtocol" : "{{ egress.ip_protocol }}",
-                    "FromPort" : "{{ egress.from_port }}",
-                    "ToPort" : "{{ egress.to_port }}",
-                    "CidrIp" : "{{ egress.grants }}"
-                 }{% if not loop.last %},{% endif %}{% endfor %}]}
+{% for grant in egress.grants %}
+{% if grant.cidr_ip is not none %}
+                    "CidrIp" : "{{ grant.cidr_ip }}",
+{% endif %}
+{% if grant.group_id is not none %}
+                    "SourceSecurityGroupName" : "{{ grant.group_id }}",
+{% endif %}
+{% if grant.groupId is not none %}
+                    "SourceSecurityGroupId" : "{{ grant.groupId }}",
+{% endif %}
+{% if grant.owner_id is not none %}
+                    "SourceSecurityGroupOwnerId" : "{{ grant.owner_id }}",
+{% endif %}
+{% endfor %}
+                    "FromPort" : "{{ egress.from_port if egress.from_port is not none else 0 }}",
+                    "ToPort" : "{{ egress.to_port if egress.to_port is not none else 65536 }}"
+
+                 }{% if not loop.last %},{% endif %}]{% endfor %}
+
+                ,{% if security_group.vpc is not none %}"VpcId" : { "Ref" : "{{ security_group.vpc.cfn_resource_name() }}" }{% endif %}
+
+            }
         },
 {% endfor %}
 {% for route_table in model.route_tables %}
@@ -61,10 +99,9 @@
             "Properties" : {
                 "VpcId" : { "Ref" : "{{ route_table.vpc.cfn_resource_name() }}" }
 {% for key,value in route_table.tags.items() %}
-                {% if loop.first %} "Tags" : [ {% endif %}
-"{{ key }}": "{{ value }}"{% if not loop.last %}, {% endif %}
-{% if loop.last %}]{% endif %}
-{% endfor %}
+{% if loop.first %}
+                ",Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
+{% if loop.last %}]{% endif %}{% endfor %}
             }
         },
 {% endfor %}
@@ -93,7 +130,7 @@
                 "SubnetId" : { "Ref" : "{{ instance.subnet.cfn_resource_name() }}" },
 {% for key,value in instance.tags.items() %}
 {% if loop.first %}
-                "Tags" : [{% endif %}"{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
+                "Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
 {% if loop.last %}],{% endif %}{% endfor %}
 
                 "Tenancy" : "{{ instance.placement_tenancy }}"
