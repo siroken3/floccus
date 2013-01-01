@@ -77,7 +77,11 @@ class CloudFormer:
             for sg in self.vpcconn.get_all_security_groups()
             if sg.vpc_id == vpc.id
             ]
+        sg_map = {}
+        for sg in security_groups:
+            sg_map[sg.id] = sg.cfn_resource_name()
         context['security_groups'] = security_groups
+        context['security_group_map'] = sg_map
         return security_groups
 
     def _form_route_tables(self, context, vpc):
