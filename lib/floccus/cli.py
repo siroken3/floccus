@@ -24,4 +24,4 @@ def main():
 # output
     env = Environment(loader=PackageLoader(__name__, 'templates'), trim_blocks='True')
     metatemplate = env.get_template('metatemplate.jinja2')
-    print metatemplate.render(model=model);
+    print metatemplate.render(model=model)

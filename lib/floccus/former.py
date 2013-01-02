@@ -38,6 +38,7 @@ class CloudFormer:
 
     def _form_vpc(self, context):
         vpcs = [CfnVpc(vpc) for vpc in self.vpcconn.get_all_vpcs()]
+        self._add_cfn_resource_map(context, vpcs)
         context['vpcs'] = vpcs
         return vpcs
 
@@ -48,6 +49,7 @@ class CloudFormer:
                 filters=[('attachment.vpc-id', vpc.id)]
                 )
             ]
+        self._add_cfn_resource_map(context, internet_gateways)
         context['internet_gateways'] = internet_gateways
         return internet_gateways
 
@@ -68,6 +70,7 @@ class CloudFormer:
                 filters=[('vpc-id', vpc.id)]
                 )
             ]
+        self._add_cfn_resource_map(context, subnets)
         context['subnets'] = subnets
         return subnets
 
@@ -77,11 +80,8 @@ class CloudFormer:
             for sg in self.vpcconn.get_all_security_groups()
             if sg.vpc_id == vpc.id
             ]
-        sg_map = {}
-        for sg in security_groups:
-            sg_map[sg.id] = sg.cfn_resource_name()
+        self._add_cfn_resource_map(context, security_groups)
         context['security_groups'] = security_groups
-        context['security_group_map'] = sg_map
         return security_groups
 
     def _form_route_tables(self, context, vpc):
@@ -91,6 +91,7 @@ class CloudFormer:
                 filters=[('vpc-id', vpc.id)]
                 )
             ]
+        self._add_cfn_resource_map(context, route_tables)
         context['route_tables'] = route_tables
         return route_tables
 
@@ -103,6 +104,7 @@ class CloudFormer:
                             for subnet in subnets
                             if subnet.id == instance.subnet_id
                         ])
+        self._add_cfn_resource_map(context, instances)
         context['instances'] = instances
         return instances
 
@@ -139,5 +141,12 @@ class CloudFormer:
                         for assoc in route_table.associations
                         if assoc.subnet_id == subnet.id
                         ])
+        self._add_cfn_resource_map(context, associations)
         context['subnet_route_table_associations'] = associations
         return associations
+
+    def _add_cfn_resource_map(self, context, cfn_objects):
+        cfn_resource_map = context['cfn_resource_map'] if 'cfn_resource_map' in context else {}
+        for cfn_object in cfn_objects:
+            cfn_resource_map[cfn_object.id] = cfn_object.cfn_resource_name()
+        context['cfn_resource_map'] = cfn_resource_map
