@@ -28,7 +28,7 @@ class CloudFormer:
         for vpc in vpcs:
             internet_gateways = self._form_internet_gateway(context, vpc)
             subnets           = self._form_subnets(context, vpc)
-            security_groups = self._form_security_groups(context, vpc)
+            security_groups   = self._form_security_groups(context, vpc)
             instances         = self._form_instances(context, vpc, subnets)
             route_tables      = self._form_route_tables(context, vpc)
             self._form_gateway_attachments(context, vpc, internet_gateways)
