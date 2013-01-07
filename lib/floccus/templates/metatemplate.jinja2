@@ -51,12 +51,14 @@
 {% if grant.group_id is not none and security_group.vpc_id is none %}
                     "SourceSecurityGroupName" : { "Ref" : "{{ model.cfn_resouce_map[grant.group_id] }}" },
 {% endif %}
-{% if grant.groupId is defined and grant.groupId is not none %}
+{% if grant.groupId is defined and grant.groupId is not none and grant.groupId != security_group.id %}
                     "SourceSecurityGroupId" : { "Ref" : "{{ model.cfn_resource_map[grant.groupId] }}" },
 {% endif %}
+{#
 {% if grant.owner_id is not none %}
                     "SourceSecurityGroupOwnerId" : "{{ grant.owner_id }}",
 {% endif %}
+#}
                     "FromPort" : "{{ ingress.from_port if ingress.from_port is not none else 0 }}",
                     "ToPort" : "{{ ingress.to_port if ingress.to_port is not none else 65536 }}"
                 }{% if not loop.last %},{% endif %}
