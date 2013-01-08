@@ -36,16 +36,86 @@
             }
         },
 {% endfor %}
+{% for security_group in model.security_groups %}
+        "{{ security_group.cfn_resource_name() }}" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "{{ security_group.description }}",
+{% if security_group.vpc is not none %}
+                "VpcId" : { "Ref" : "{{ security_group.vpc.cfn_resource_name() }}" }
+{% endif %}
+            }
+        },
+{% for ingress in security_group.rules %}
+{% for grant in ingress.grants %}
+        "{{ security_group.cfn_resource_name() }}SecurityGroupIngress{{ loop.index }}" : {
+            "Type" : "AWS::EC2::SecurityGroupIngress",
+            "Properties" : {
+{% if security_group.vpc_id is none %}
+                "GroupName" : "{{ security_group.cfn_resource_name() }}",
+{% if grant.group_id is not none  %}
+                "SourceSecurityGroupName" : { "Ref" : "{{ model.cfn_resouce_map[grant.group_id] }}" },
+{% endif %}
+{% else %}
+                "GroupId" : { "Ref" : "{{ security_group.cfn_resource_name() }}" },
+{% if grant.groupId is defined and grant.groupId is not none %}
+                "SourceSecurityGroupId" : { "Ref" : "{{ model.cfn_resource_map[grant.groupId] }}" },
+{% endif %}
+{% endif %}
+                "IpProtocol" : "{{ ingress.ip_protocol }}",
+{% if grant.cidr_ip is not none %}
+                "CidrIp" : "{{ grant.cidr_ip }}",
+{% endif %}
+{#
+{% if grant.owner_id is not none %}
+                "SourceSecurityGroupOwnerId" : "{{ grant.owner_id }}",
+{% endif %}
+#}
+                "FromPort" : "{{ ingress.from_port if ingress.from_port is not none else 0 }}",
+                "ToPort" : "{{ ingress.to_port if ingress.to_port is not none else 65536 }}"
+            }
+        },
+{% endfor %}
+{% endfor %}
+{% for egress in security_group.rules_egress %}
+{% for grant in egress.grants %}
+        "{{ security_group.cfn_resource_name() }}SecurityGroupEgress{{ loop.index }}" : {
+            "Type" : "AWS::EC2::SecurityGroupEgress",
+            "Properties" : {
+{% if security_group.vpc_id is none %}
+                "GroupName" : "{{ security_group.cfn_resource_name() }}",
+{% if grant.group_id is not none %}
+                "SourceSecurityGroupName" : { "Ref" : "{{ model.cfn_resource_map[grant.group_id] }}" },
+{% endif %}
+{% else %}
+                "GroupId" : { "Ref" : "{{ security_group.cfn_resource_name() }}" },
+{% if grant.groupId is defined and grant.groupId is not none %}
+                "SourceSecurityGroupId" : { "Ref" : "{{ model.cfn_resource_map[grant.groupId] }}" },
+{% endif %}
+{% endif %}
+                "IpProtocol" : "{{ egress.ip_protocol }}",
+{% if grant.cidr_ip is not none %}
+                "CidrIp" : "{{ grant.cidr_ip }}",
+{% endif %}
+{% if grant.owner_id is not none %}
+                "SourceSecurityGroupOwnerId" : { "Ref" : "{{ grant.owner_id }}" },
+{% endif %}
+                "FromPort" : "{{ egress.from_port if egress.from_port is not none else 0 }}",
+                "ToPort" : "{{ egress.to_port if egress.to_port is not none else 65536 }}"
+            }
+        },
+{% endfor %}
+{% endfor %}
+{% endfor %}
 {% for route_table in model.route_tables %}
         "{{ route_table.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::RouteTable",
             "Properties" : {
                 "VpcId" : { "Ref" : "{{ route_table.vpc.cfn_resource_name() }}" }
 {% for key,value in route_table.tags.items() %}
-                {% if loop.first %} "Tags" : [ {% endif %}
-"{{ key }}": "{{ value }}"{% if not loop.last %}, {% endif %}
-{% if loop.last %}]{% endif %}
-{% endfor %}
+{% if loop.first %}
+                ",Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
+{% if loop.last %}]{% endif %}{% endfor %}
             }
         },
 {% endfor %}
@@ -74,7 +144,7 @@
                 "SubnetId" : { "Ref" : "{{ instance.subnet.cfn_resource_name() }}" },
 {% for key,value in instance.tags.items() %}
 {% if loop.first %}
-                "Tags" : [{% endif %}"{{ key }}": "{{ value }}"{% if not loop.last %},{% endif %}
+                "Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
 {% if loop.last %}],{% endif %}{% endfor %}
 
                 "Tenancy" : "{{ instance.placement_tenancy }}"
