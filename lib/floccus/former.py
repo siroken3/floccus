@@ -2,7 +2,9 @@
 
 import boto
 import boto.ec2
+import boto.ec2.autoscale
 import boto.vpc
+import boto.sns
 import argparse
 
 from models import *
@@ -16,6 +18,7 @@ class CloudFormer:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key
             )
+        self.region_name = region_name
 
     def form(self):
         self.vpcconn = boto.connect_vpc(
@@ -23,17 +26,32 @@ class CloudFormer:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key
             )
+        self.asconn = boto.ec2.autoscale.connect_to_region(
+            self.region_name,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
+        self.snsconn = boto.sns.connect_to_region(
+            self.region_name,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
         context = {}
         vpcs = self._form_vpc(context)
         for vpc in vpcs:
-            internet_gateways = self._form_internet_gateway(context, vpc)
-            subnets           = self._form_subnets(context, vpc)
-            security_groups   = self._form_security_groups(context, vpc)
-            instances         = self._form_instances(context, vpc, subnets)
-            route_tables      = self._form_route_tables(context, vpc)
+            internet_gateways     = self._form_internet_gateway(context, vpc)
+            subnets               = self._form_subnets(context, vpc)
+            security_groups       = self._form_security_groups(context, vpc)
+            instances             = self._form_instances(context, vpc, subnets)
+            route_tables          = self._form_route_tables(context, vpc)
+            launch_configurations = self._form_auto_scaling_launch_configuration(context, security_groups)
             self._form_gateway_attachments(context, vpc, internet_gateways)
-            self._form_route(context, route_tables, internet_gateways, instances)
             self._form_subnet_route_table_association(context, route_tables, subnets)
+            self._form_route(context, route_tables, internet_gateways, instances)
+            self._form_auto_scaling_group(context, launch_configurations, subnets)
+
+        policies              = self._form_auto_scaling_policy(context)
+        topics                = self._form_sns_topics(context)
         return context
 
     def _form_vpc(self, context):
@@ -145,8 +163,44 @@ class CloudFormer:
         context['subnet_route_table_associations'] = associations
         return associations
 
+    def _form_auto_scaling_launch_configuration(self, context, cfn_security_groups):
+        configurations = []
+        for lc in self.asconn.get_all_launch_configurations():
+            lc_sgs = lc.security_groups
+            target_cfn_sg_groups = [cfn_sg_group for cfn_sg_group in cfn_security_groups if cfn_sg_group.id in lc_sgs]
+            configurations.extend([CfnAutoScalingLaunchConfiguration(lc, target_cfn_sg_groups)])
+        context['launch_configurations'] = configurations
+        return configurations
+
+    def _form_auto_scaling_group(self, context, launch_configurations, subnets):
+        groups = []
+        for asg in self.asconn.get_all_groups():
+            zone_ids = asg.vpc_zone_identifier.split(',')
+            cfn_subnets = [s for s in subnets if s.id in zone_ids]
+            for lc in launch_configurations:
+                if asg.launch_config_name == lc.name:
+                    groups.extend([
+                    CfnAutoScalingGroup(asg, cfn_launch_configuration=lc, cfn_subnets=cfn_subnets)
+                    ])
+        context['auto_scaling_groups'] = groups
+        return groups
+
+    def _form_auto_scaling_policy(self, context):
+        auto_scaling_policies = [CfnAutoScalingPolicy(p) for p in self.asconn.get_all_policies()]
+        context['scaling_policies'] = auto_scaling_policies
+        return auto_scaling_policies
+
+    def _form_sns_topics(self, context):
+        topics = []
+        for topic_arn in self.snsconn.get_all_topics()['ListTopicsResponse']['ListTopicsResult']['Topics']:
+            subscriptions = self.snsconn.get_all_subscriptions_by_topic(topic_arn['TopicArn'])['ListSubscriptionsByTopicResponse']['ListSubscriptionsByTopicResult']['Subscriptions']
+            topics.extend([CfnSnsTopics(topic_arn, subscriptions)])
+        context['sns_topics'] = topics
+        return topics
+
     def _add_cfn_resource_map(self, context, cfn_objects):
         cfn_resource_map = context['cfn_resource_map'] if 'cfn_resource_map' in context else {}
         for cfn_object in cfn_objects:
             cfn_resource_map[cfn_object.id] = cfn_object.cfn_resource_name()
         context['cfn_resource_map'] = cfn_resource_map
+

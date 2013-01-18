@@ -21,8 +21,8 @@
         "{{ attachment.cfn_resource_name() }}" : {
            "Type" : "AWS::EC2::VPCGatewayAttachment",
            "Properties" : {
-               "VpcId" : { "Ref" : "{{ attachment.vpc.cfn_resource_name() }}" },
-               "InternetGatewayId" : { "Ref" : "{{ attachment.gateway.cfn_resource_name() }}" }
+               "VpcId" : {{ attachment.vpc | to_cfn_ref }},
+               "InternetGatewayId" : {{ attachment.gateway | to_cfn_ref }}
            }
         },
 {% endfor %}
@@ -32,7 +32,7 @@
             "Properties" : {
                 "AvailabilityZone" : "{{ subnet.availability_zone }}",
                 "CidrBlock" : "{{ subnet.cidr_block }}",
-                "VpcId" : { "Ref" : "{{ subnet.vpc.cfn_resource_name() }}" }
+                "VpcId" : {{ subnet.vpc | to_cfn_ref }}
             }
         },
 {% endfor %}
@@ -42,7 +42,7 @@
             "Properties" : {
                 "GroupDescription" : "{{ security_group.description }}",
 {% if security_group.vpc is not none %}
-                "VpcId" : { "Ref" : "{{ security_group.vpc.cfn_resource_name() }}" }
+                "VpcId" : {{ security_group.vpc | to_cfn_ref }}
 {% endif %}
             }
         },
@@ -54,12 +54,12 @@
 {% if security_group.vpc_id is none %}
                 "GroupName" : "{{ security_group.cfn_resource_name() }}",
 {% if grant.group_id is not none  %}
-                "SourceSecurityGroupName" : { "Ref" : "{{ model.cfn_resouce_map[grant.group_id] }}" },
+                "SourceSecurityGroupName" : {{ model.cfn_resouce_map[grant.group_id] | to_cfn_ref }},
 {% endif %}
 {% else %}
-                "GroupId" : { "Ref" : "{{ security_group.cfn_resource_name() }}" },
+                "GroupId" : {{ security_group | to_cfn_ref }},
 {% if grant.groupId is defined and grant.groupId is not none %}
-                "SourceSecurityGroupId" : { "Ref" : "{{ model.cfn_resource_map[grant.groupId] }}" },
+                "SourceSecurityGroupId" : {{ model.cfn_resource_map[grant.groupId] | to_cfn_ref }},
 {% endif %}
 {% endif %}
                 "IpProtocol" : "{{ ingress.ip_protocol }}",
@@ -85,12 +85,12 @@
 {% if security_group.vpc_id is none %}
                 "GroupName" : "{{ security_group.cfn_resource_name() }}",
 {% if grant.group_id is not none %}
-                "SourceSecurityGroupName" : { "Ref" : "{{ model.cfn_resource_map[grant.group_id] }}" },
+                "SourceSecurityGroupName" : {{ model.cfn_resource_map[grant.group_id] | to_cfn_ref }},
 {% endif %}
 {% else %}
-                "GroupId" : { "Ref" : "{{ security_group.cfn_resource_name() }}" },
+                "GroupId" : {{ security_group | to_cfn_ref }},
 {% if grant.groupId is defined and grant.groupId is not none %}
-                "SourceSecurityGroupId" : { "Ref" : "{{ model.cfn_resource_map[grant.groupId] }}" },
+                "SourceSecurityGroupId" : {{ model.cfn_resource_map[grant.groupId] | to_cfn_ref }},
 {% endif %}
 {% endif %}
                 "IpProtocol" : "{{ egress.ip_protocol }}",
@@ -98,7 +98,7 @@
                 "CidrIp" : "{{ grant.cidr_ip }}",
 {% endif %}
 {% if grant.owner_id is not none %}
-                "SourceSecurityGroupOwnerId" : { "Ref" : "{{ grant.owner_id }}" },
+                "SourceSecurityGroupOwnerId" : {{ grant.owner_id | to_cfn_ref }},
 {% endif %}
                 "FromPort" : "{{ egress.from_port if egress.from_port is not none else 0 }}",
                 "ToPort" : "{{ egress.to_port if egress.to_port is not none else 65536 }}"
@@ -111,21 +111,17 @@
         "{{ route_table.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::RouteTable",
             "Properties" : {
-                "VpcId" : { "Ref" : "{{ route_table.vpc.cfn_resource_name() }}" }
-{% for key,value in route_table.tags.items() %}
-{% if loop.first %}
-                ",Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
-{% if loop.last %}]{% endif %}{% endfor %}
+                "VpcId" : {{ route_table.vpc | to_cfn_ref }},
+                "Tags" : {{ route_table.tags | to_cfn_tag }}
             }
         },
 {% endfor %}
-
 {% for subnet_route_table_association in model.subnet_route_table_associations %}
         "{{ subnet_route_table_association.cfn_resource_name() }}" : {
             "Type" : "AWS::EC2::SubnetRouteTableAssociation",
             "Properties" : {
-                "RouteTableId" : { "Ref" : "{{ subnet_route_table_association.route_table.cfn_resource_name() }}" },
-                "SubnetId" : { "Ref" : "{{ subnet_route_table_association.subnet.cfn_resource_name() }}" }
+                "RouteTableId" : {{ subnet_route_table_association.route_table | to_cfn_ref }},
+                "SubnetId" : {{ subnet_route_table_association.subnet | to_cfn_ref }}
             }
         },
 {% endfor %}
@@ -141,26 +137,81 @@
                 "Monitoring" : "{{ instance.monitored }}",
                 "PrivateIpAddress" : "{{ instance.private_ip_address }}",
                 "SourceDestCheck" : "{{ instance.get_attribute('sourceDestCheck').sourceDestCheck }}",
-                "SubnetId" : { "Ref" : "{{ instance.subnet.cfn_resource_name() }}" },
-{% for key,value in instance.tags.items() %}
-{% if loop.first %}
-                "Tags" : [{% endif %}{ "Key":"{{ key }}","Value":"{{ value }}" }{% if not loop.last %},{% endif %}
-{% if loop.last %}],{% endif %}{% endfor %}
-
+                "SubnetId" : {{ instance.subnet | to_cfn_ref }},
+                "Tags" : {{ instance.tags | to_cfn_tag }},
                 "Tenancy" : "{{ instance.placement_tenancy }}"
             }
         },
 {% endfor %}
+
 {% for route in model.routes if route.gateway.id != 'local' %}
         "{{ route.cfn_resource_name() }}": {
             "Type" : "AWS::EC2::Route",
             "Properties" : {
                 "DestinationCidrBlock" : "{{ route.destination_cidr_block }}",
-                "RouteTableId" : { "Ref" : "{{ route.route_table.cfn_resource_name() }}" }{% if route.gateway is not none %},
-                "GatewayId" : { "Ref" : "{{ route.gateway.cfn_resource_name() }}" }{% endif %}{% if route.instance is not none %},
-                "InstanceId" : { "Ref" : "{{ route.instance.cfn_resource_name() }}" }{% endif %}{% if route.networkinterface is defined %},
-                "NetworkInterfaceId" : { "Ref" : "{{ route.networkinterface.cfn_resource_name() }}" }{% endif %}
+                "RouteTableId" : {{ route.route_table | to_cfn_ref }}{% if route.gateway is not none %},
+                "GatewayId" : {{ route.gateway | to_cfn_ref }}{% endif %}{% if route.instance is not none %},
+                "InstanceId" : {{ route.instance | to_cfn_ref }}{% endif %}{% if route.networkinterface is defined %},
+                "NetworkInterfaceId" : {{ route.networkinterface | to_cfn_ref }}{% endif %}
 
+            }
+        },
+{% endfor %}
+
+{% for as_group in model.auto_scaling_groups %}
+        "{{ as_group.cfn_resource_name() }}": {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "Properties" : {
+                "AvailabilityZones" : {{ as_group.availability_zones | to_json_list }},
+                "Cooldown" : "{{ as_group.cooldown }}",
+                "DesiredCapacity" : "{{ as_group.desired_capacity }}",
+                "HealthCheckGracePeriod" : "{{ as_group.health_check_period }}",
+                "HealthCheckType" : "{{ as_group.health_check_type }}",
+                "LaunchConfigurationName" : "{{ as_group.launch_configuration.cfn_resource_name() }}",
+                "LoadBalancerNames" : {{ as_group.load_balancers | to_json_list }},
+                "MaxSize" : "{{ as_group.max_size }}",
+                "MinSize" : "{{ as_group.min_size }}",
+                "VPCZoneIdentifier" : "{{ as_group.vpc_zone_identifier }}",
+                "Tags" : {{ as_group.tags | to_cfn_tag }}
+            }
+        },
+{% endfor %}
+{% for as_lc in model.launch_configurations %}
+        "{{ as_lc.cfn_resource_name() }}": {
+            "Type" : "AWS::AutoScaling::LaunchConfiguration",
+            "Properties" : {
+                "BlockDeviceMappings" : {{ as_lc.block_device_mappings | to_json_list }},
+                "IamInstanceProfile" : "{{ as_lc.instance_profile_name }}",
+                "ImageId" : "{{ as_lc.image_id }}",
+                "InstanceMonitoring" : "{{ as_lc.instance_monitoring.enabled }}",
+                "InstanceType" : "{{ as_lc.instance_type }}",
+                "KernelId" : "{{ as_lc.kernel_id }}",
+                "KeyName" : "{{ as_lc.key_name }}",
+                "RamDiskId" : "{{ as_lc.ramdisk_id }}",
+                "SecurityGroups" : {{ as_lc.security_groups | to_cfn_ref_list }},
+                "SpotPrice" : "{{ as_lc.spot_price }}",
+                "UserData" : "{{ as_lc.user_data }}"
+            }
+        },
+{% endfor %}
+
+{% for as_policy in model.scaling_policies %}
+        "{{ as_policy.cfn_resource_name() }}": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType" : "{{ as_policy.adjustment_type }}",
+                "AutoScalingGroupName" : "{{ as_policy.as_name }}",
+                "Cooldown" : "{{ as_policy.cooldown }}",
+                "ScalingAdjustment" : "{{ as_policy.scalling_adjustment }}"
+            }
+        },
+{% endfor %}
+
+{% for sns_topic in model.sns_topics %}
+        "{{ sns_topic.cfn_resource_name() }}": {
+            "Type" : "AWS::SNS::Topic",
+            "Properties" : {
+                "Subscription" : {{ sns_topic.subscriptions | to_json_list }}
             }
         }{% if not loop.last %},{% endif %}
 
