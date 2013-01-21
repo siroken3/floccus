@@ -167,11 +167,11 @@
                 "DesiredCapacity" : "{{ as_group.desired_capacity }}",
                 "HealthCheckGracePeriod" : "{{ as_group.health_check_period }}",
                 "HealthCheckType" : "{{ as_group.health_check_type }}",
-                "LaunchConfigurationName" : "{{ as_group.launch_configuration.cfn_resource_name() }}",
+                "LaunchConfigurationName" : {{ as_group.launch_configuration | to_cfn_ref }},
                 "LoadBalancerNames" : {{ as_group.load_balancers | to_json_list }},
                 "MaxSize" : "{{ as_group.max_size }}",
                 "MinSize" : "{{ as_group.min_size }}",
-                "VPCZoneIdentifier" : "{{ as_group.vpc_zone_identifier }}",
+                "VPCZoneIdentifier" : {{ as_group.subnets | to_cfn_ref_list }},
                 "Tags" : {{ as_group.tags | to_cfn_tag }}
             }
         },
@@ -181,15 +181,25 @@
             "Type" : "AWS::AutoScaling::LaunchConfiguration",
             "Properties" : {
                 "BlockDeviceMappings" : {{ as_lc.block_device_mappings | to_json_list }},
+{% if as_lc.instance_profile_name %}
                 "IamInstanceProfile" : "{{ as_lc.instance_profile_name }}",
+{% endif %}
                 "ImageId" : "{{ as_lc.image_id }}",
                 "InstanceMonitoring" : "{{ as_lc.instance_monitoring.enabled }}",
                 "InstanceType" : "{{ as_lc.instance_type }}",
+{% if as_lc.kernel_id %}
                 "KernelId" : "{{ as_lc.kernel_id }}",
+{% endif %}
+{% if as_lc.key_name %}
                 "KeyName" : "{{ as_lc.key_name }}",
+{% endif %}
+{% if as_lc.ramdisk_id %}
                 "RamDiskId" : "{{ as_lc.ramdisk_id }}",
+{% endif %}
                 "SecurityGroups" : {{ as_lc.security_groups | to_cfn_ref_list }},
+{% if as_lc.spot_price %}
                 "SpotPrice" : "{{ as_lc.spot_price }}",
+{% endif %}
                 "UserData" : "{{ as_lc.user_data }}"
             }
         },
@@ -201,8 +211,10 @@
             "Properties": {
                 "AdjustmentType" : "{{ as_policy.adjustment_type }}",
                 "AutoScalingGroupName" : "{{ as_policy.as_name }}",
-                "Cooldown" : "{{ as_policy.cooldown }}",
-                "ScalingAdjustment" : "{{ as_policy.scalling_adjustment }}"
+{% if as_policy.scaling_adjustment %}
+                "ScalingAdjustment" : "{{ as_policy.scaling_adjustment }}",
+{% endif %}
+                "Cooldown" : "{{ as_policy.cooldown }}"
             }
         },
 {% endfor %}
