@@ -3,10 +3,10 @@
 import os
 import sys
 import argparse
-from jinja2 import Environment, PackageLoader
 
 from former import CloudFormer
 import utils
+import template
 
 def main():
 # parse arguments
@@ -22,6 +22,4 @@ def main():
     model = former.form()
 
 # output
-    env = Environment(loader=PackageLoader(__name__, 'templates'), trim_blocks='True')
-    metatemplate = env.get_template('metatemplate.jinja2')
-    print metatemplate.render(model=model)
+    print template.output(model)
