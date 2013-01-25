@@ -1,9 +1,10 @@
 # -*- coding:utf-8 -*-
 
 import os
+import argparse
+
 import botocore.session
 from botocore.session import EnviromnentVariables
-import argparse
 
 from models import *
 
@@ -15,8 +16,9 @@ class Floccus:
             os.environ[EnviromnentVariables['secret_key']]  = secret_key
         if region_name is not None:
             os.environ[EnviromnentVariables['region_name']] = region_name
-        self.session = botocore.session.get_session()
-
+            self.region_name = region_name
+        session = botocore.session.get_session()
+        self.ec2service = session.get_service('ec2')
     def form(self):
         context = {}
         vpcs = self._form_vpc(context)
@@ -38,15 +40,21 @@ class Floccus:
         return context
 
     def _form_vpc(self, context):
-        vpcs = [CfnVpc(vpc) for vpc in self.vpcconn.get_all_vpcs()]
+        operation = self.ec2service.get_operation('DescribeVpcs')
+        endpoint = self.ec2service.get_endpoint(self.region_name)
+        http_response, data = operation.call(endpoint)
+        vpcs = [CfnVpc(vpc) for vpc in data['vpcSet']]
         self._add_cfn_resource_map(context, vpcs)
         context['vpcs'] = vpcs
         return vpcs
 
     def _form_internet_gateway(self, context, vpc):
+        operation = self.ec2service.get_operation('DescribeInternetGateways')
+        endpoint = self.ec2service.get_endpoint(self.region_name)
+        http_response, data = operation.call(endpoint)
         internet_gateways = [
             CfnInternetGateWay(igw)
-            for igw in self.vpcconn.get_all_internet_gateways(
+            for igw in data[]
                 filters=[('attachment.vpc-id', vpc.id)]
                 )
             ]
