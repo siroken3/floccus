@@ -205,6 +205,30 @@
         },
 {% endfor %}
 
+{% for db_instance in model.db_instances %}
+        "{{ db_instance.cfn_resource_name() }}": {
+            "Type": "AWS::RDS::DBInstance",
+            "Properties": {
+                "AllocatedStorage": "{{ db_instance.allocated_storage }}",
+                "AutoMinorVersionUpgrade" : "{{ db_instance.AutoMinorVersionUpgrade }}",
+                "AvailabilityZone" : "{{ db_instance.availability_zone }}",
+                "BackupRetentionPeriod" : "{{ db_instance.backup_retention_period }}",
+                "DBInstanceClass" : "{{ db_instance.instance_class }}",
+                "DBName" : "{{ db_instance.DBName }}",
+                "DBParameterGroupName" : "{{ db_instance.parameter_group }}",
+                "Engine" : "{{ db_instance.engine }}",
+                "EngineVersion" : "{{ db_instance.EngineVersion }}",
+                "LicenseModel" : "{{ db_instance.LicenseModel }}",
+                "MasterUsername" : "{{ db_instance.master_username }}",
+                "MasterUserPassword" : "",
+                "MultiAZ" : "{{ db_instance.multi_az }}",
+                "Port" : "{{ db_instance.endpoint[1] }}",
+                "PreferredBackupWindow" : "{{ db_instance.preferred_backup_window }}",
+                "PreferredMaintenanceWindow" : "{{ db_instance.preferred_maintenance_window }}"
+            }
+        },
+{% endfor %}
+
 {% for as_policy in model.scaling_policies %}
         "{{ as_policy.cfn_resource_name() }}": {
             "Type": "AWS::AutoScaling::ScalingPolicy",

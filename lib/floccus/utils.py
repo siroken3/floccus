@@ -2,12 +2,19 @@
 
 import os
 import json
+import string
 import boto.ec2.tag
 
 def iterateTags(dict_or_TagSet):
-    items = dict_or_TagSet.items() if isinstance(dict_or_TagSet, boto.ec2.tag.TagSet) else dict_or_TagSet
-    for key, value in items:
-        yield (key, value)
+    if isinstance(dict_or_TagSet, boto.ec2.tag.TagSet):
+        for key, value in dict_or_TagSet.items():
+            yield (key, value)
+    elif isinstance(dict_or_TagSet, boto.resultset.ResultSet):
+        for astag in dict_or_TagSet:
+            yield (astag.key, astag.value)
+    else:
+        for key, value in dict_or_TagSet:
+            yield (key, value)
 
 def to_json_list(a_list):
     if len(a_list) == 0:
@@ -52,6 +59,14 @@ def get_aws_key(access_key=None, secret_key=None):
         aws_secret_key = secret_key
 
     return (aws_access_key, aws_secret_key)
+
+def normalize_name(name):
+    return name.translate({
+            ord(u'/'):u'',
+            ord(u'-'):u'',
+            ord(u'.'):u'',
+            ord(u'-'):u''
+            })
 
 class CfnAWSResourceEncoder(json.JSONEncoder):
     def default(self, obj):
