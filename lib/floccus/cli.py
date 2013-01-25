@@ -4,9 +4,9 @@ import os
 import sys
 import argparse
 
-from former import CloudFormer
+from floccus import Floccus
 import utils
-import template
+import dumper
 
 def main():
 # parse arguments
@@ -18,8 +18,8 @@ def main():
     access_key, secret_key = utils.get_aws_key(parsed.aws_access_key, parsed.aws_secret_key)
 
 # do form
-    former = CloudFormer(access_key=access_key, secret_key=secret_key, region_name=parsed.region)
-    model = former.form()
+    floccus = Floccus(access_key=access_key, secret_key=secret_key, region_name=parsed.region)
+    model = floccus.form()
 
 # output
-    print template.output(model)
+    print dumper.output(model)
