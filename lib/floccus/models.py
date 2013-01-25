@@ -22,7 +22,7 @@ class CfnAWSResource(object):
             return (self.id)
 
     def cfn_resource_name(self):
-        return self._identity().replace('-','')
+        return utils.normalize_name(self._identity())
 
 class CfnTaggedResource(CfnAWSResource):
     def __init__(self, botoobj):
@@ -68,7 +68,7 @@ class CfnSubnet(CfnAWSResource):
         self.vpc = cfn_vpc
 
     def cfn_resource_name(self):
-        return self.vpc.cfn_resource_name() + self.cidr_block.replace('.','').replace('/','') + "Subnet"
+        return self.vpc.cfn_resource_name() + utils.normalize_name(self.cidr_block) + "Subnet"
 
 class CfnSecurityGroup(CfnAWSResource):
     def __init__(self, security_group, cfn_vpc):
@@ -76,7 +76,7 @@ class CfnSecurityGroup(CfnAWSResource):
         self.vpc = cfn_vpc
 
     def cfn_resource_name(self):
-        return self.vpc.cfn_resource_name() + self.name.replace('-','') + "SecurityGroup"
+        return self.vpc.cfn_resource_name() + utils.normalize_name(self.name) + "SecurityGroup"
 
 class CfnRouteTable(CfnTaggedResource):
     def __init__(self, route_table, cfn_vpc):
@@ -98,7 +98,7 @@ class CfnRoute(CfnAWSResource):
         self.network_interface = cfn_network_interface
 
     def cfn_resource_name(self):
-        return self.route_table.cfn_resource_name() + self.destination_cidr_block.replace('/','').replace('.','')
+        return self.route_table.cfn_resource_name() + utils.normalize_name(self.destination_cidr_block)
 
 class CfnEC2Instance(CfnTaggedResource):
     def __init__(self, instance, cfn_subnet):
@@ -145,4 +145,8 @@ class CfnSnsTopics(CfnAWSResource):
         self.subscriptions = cfn_subscriptions
 
     def _identity(self):
-        return self.topic_arn.rsplit(':', 1)[1] + "SnsTopic"
+        return self.topic_arn.rsplit(':', 1)[1]
+
+class CfnDBInstance(CfnAWSResource):
+    def __init__(self, db_instance):
+        CfnAWSResource.__init__(self, db_instance)

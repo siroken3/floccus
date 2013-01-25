@@ -5,6 +5,7 @@ import boto.ec2
 import boto.ec2.autoscale
 import boto.vpc
 import boto.sns
+import boto.rds
 import argparse
 
 from models import *
@@ -36,6 +37,11 @@ class CloudFormer:
             aws_access_key_id=self.access_key,
             aws_secret_access_key=self.secret_key
             )
+        self.rdsconn = boto.rds.connect_to_region(
+            self.region_name,
+            aws_access_key_id=self.access_key,
+            aws_secret_access_key=self.secret_key
+            )
         context = {}
         vpcs = self._form_vpc(context)
         for vpc in vpcs:
@@ -52,6 +58,7 @@ class CloudFormer:
 
         policies              = self._form_auto_scaling_policy(context)
         topics                = self._form_sns_topics(context)
+        db_instances          = self._form_db_instance(context)
         return context
 
     def _form_vpc(self, context):
@@ -197,6 +204,11 @@ class CloudFormer:
             topics.extend([CfnSnsTopics(topic_arn, subscriptions)])
         context['sns_topics'] = topics
         return topics
+
+    def _form_db_instance(self, context):
+        db_instances = [CfnDBInstance(d) for d in self.rdsconn.get_all_dbinstances()]
+        context['db_instances'] = db_instances
+        return db_instances
 
     def _add_cfn_resource_map(self, context, cfn_objects):
         cfn_resource_map = context['cfn_resource_map'] if 'cfn_resource_map' in context else {}
