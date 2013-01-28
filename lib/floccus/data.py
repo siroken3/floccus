@@ -20,7 +20,7 @@ cfn_properties = {
     "AWS::EC2::SecurityGroup": {
         "groupDescription": ("GroupDescription","self.api_response[api_key]"),
         "ipPermissions": ("SecurityGroupIngress","[p for p in getattr(self, api_key)]"),
-        "ipPermissionEgress": ("SecurityGroupEgress","[p for p in getter(self, api_key)]"),
+        "ipPermissionEgress": ("SecurityGroupEgress","[p for p in getattr(self, api_key)]"),
         "vpc": ("VpcId","getattr(self, api_key).to_cfn_ref()")
         }
     }

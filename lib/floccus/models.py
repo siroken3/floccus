@@ -103,7 +103,7 @@ class CfnSecurityGroup(CfnAWSResource):
             self.ipPermissionEgress = [self.RulePropertyType(egress) for egress in egresses]
 
     def cfn_id(self):
-        return self.vpc.cfn_id() + api_response['groupDescription'] + "SecurityGroup"
+        return self.vpc.cfn_id() + self.api_response['groupDescription'] + "SecurityGroup"
 
     def resource_type(self):
         return "AWS::EC2::SecurityGroup"
