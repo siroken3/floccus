@@ -45,14 +45,13 @@ def test_internetgateway():
     result = json.dumps(igw, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
-def test_vpcgatewayattachment_internetgateway():
+def test_vpcattachment_internetgateway():
     vpc = vpcs[0]
-    igw = internet_gateways[0]
-    igwattachment = CfnVpcGatewayAttachment(
+    igwattachment = CfnInternetGatewayAttachment(
         {u'attachmentSet': [{u'state': u'available',
                              u'vpcId': u'vpc-aa7704c3'}],
          u'internetGatewayId': u'igw-a17704c8',
-         u'tagSet': []}, vpc, igw)
+         u'tagSet': []}, vpc, internet_gateways)
     expects = json.dumps({
             "vpcaa7704c3igwa17704c8": {
                 "Type": "AWS::EC2::VPCGatewayAttachment",

@@ -26,14 +26,13 @@ class CfnAWSResource(object):
         properties = {}
         propertymap = data.cfn_properties[self.resource_type()]
         for key,value in propertymap.items():
-            property_key, property_value = propertymap[key]
-            properties[property_key] = eval(property_value)
+            property_name, property_value = value
+            properties[property_name] = eval(property_value)
         return properties
 
 class CfnAWSResourceRef():
-    def __init__(self, cfn_resource, property_name=None):
+    def __init__(self, cfn_resource):
         self.cfn_resource = cfn_resource
-        self.property_name = property_name
 
     def cfn_id(self):
         return self.cfn_resource.cfn_id()
@@ -55,7 +54,7 @@ class CfnVpc(CfnAWSResource):
 class CfnInternetGateway(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response)
-        self.vpc = cfn_vpc
+        self.vpc = CfnAWSResourceRef(cfn_vpc)
 
     def cfn_id(self):
         return self.api_response['internetGatewayId']
@@ -63,30 +62,16 @@ class CfnInternetGateway(CfnAWSResource):
     def resource_type(self):
         return "AWS::EC2::InternetGateway"
 
-class CfnVpcGatewayAttachment(CfnAWSResource):
-    def __init__(self, api_response, cfn_vpc, cfn_internet_gateway=None, cfn_vpn_gateway=None):
+class CfnInternetGatewayAttachment(CfnAWSResource):
+    def __init__(self, api_response, cfn_vpc, cfn_internet_gateways):
         CfnAWSResource.__init__(self, api_response)
-        self.vpc = cfn_vpc
-        if cfn_internet_gateway is not None:
-            self.internet_gateway = CfnAWSResourceRef(cfn_internet_gateway,'InternetGatewayId')
-        if cfn_vpn_gateway is not None:
-            self.vpn_gateway = CfnAWSResourceRef(cfn_vpn_gateway,'VpnGatewayId')
+        self.vpc = CfnAWSResourceRef(cfn_vpc)
+        for cfn_igw in cfn_internet_gateways:
+            if self.api_response['internetGatewayId'] == cfn_igw.cfn_id():
+                self.internet_gateway = CfnAWSResourceRef(cfn_igw)
 
     def cfn_id(self):
         return self.vpc.cfn_id() + self.internet_gateway.cfn_id()
-
-    def resource_properties(self):
-        properties = {}
-
-        for targets in self.api_response['attachmentSet']:
-            if targets['vpcId'] == self.vpc.cfn_id():
-                properties['VpcId'] = CfnAWSResourceRef(self.vpc).to_cfn_ref()
-                break
-
-        for ref in [getattr(self, a) for a in dir(self) if isinstance(getattr(self, a), CfnAWSResourceRef)]:
-            properties[ref.property_name] = ref.to_cfn_ref()
-
-        return properties
 
     def resource_type(self):
         return "AWS::EC2::VPCGatewayAttachment"
@@ -94,10 +79,10 @@ class CfnVpcGatewayAttachment(CfnAWSResource):
 class CfnSubnet(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response)
-        self.cfn_vpc = cfn_vpc
+        self.vpc = CfnAWSResourceRef(cfn_vpc)
 
-    def name(self):
-        return utils.normalize_name(self.api_response['subnetId'])
+    def cfn_id(self):
+        return self.api_response['subnetId']
 
     def resource_type(self):
         return "AWS::EC2::Subnet"

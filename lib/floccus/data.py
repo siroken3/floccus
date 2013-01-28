@@ -9,12 +9,12 @@ cfn_properties = {
         "tagSet": ("Tags","self.api_response[key]")
         },
     "AWS::EC2::VPCGatewayAttachment": {
-        "vpcId": ("VpcId","self.api_response[key]"),
-        "internetGatewayId": ("InternetGatewayId","self.api_response[key]")
+        "vpc": ("VpcId","getattr(self, key).to_cfn_ref()"),
+        "internet_gateway": ("InternetGatewayId","getattr(self, key).to_cfn_ref()")
         },
     "AWS::EC2::Subnet": {
         "availabilityZone": ("AvailabilityZone","self.api_response[key]"),
         "cidrBlock": ("CidrBlock","self.api_response[key]"),
-        "vpcId": ("VpcId", "{'Ref': self.cfn_vpc.name()}")
+        "vpc": ("VpcId", "getattr(self, key).to_cfn_ref()")
         }
     }
