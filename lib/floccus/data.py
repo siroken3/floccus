@@ -15,6 +15,6 @@ cfn_properties = {
     "AWS::EC2::Subnet": {
         "availabilityZone": ("AvailabilityZone","self.api_response[key]"),
         "cidrBlock": ("CidrBlock","self.api_response[key]"),
-        "vpcId": ("VpcId", "{'Ref': self.cfn_vpc.resource_name()}")
+        "vpcId": ("VpcId", "{'Ref': self.cfn_vpc.name()}")
         }
     }

@@ -8,7 +8,7 @@ class CfnJsonEncoder(JSONEncoder):
     def default(self, o):
         if isinstance(o, CfnAWSResource):
             return {
-                o.resource_name(): {
+                o.name(): {
                     "Type": o.resource_type(),
                     "Properties": o.resource_properties()
                     }
@@ -19,7 +19,7 @@ class CfnAWSResource(object):
     def __init__(self, api_response):
         self.api_response = api_response
 
-    def resource_name(self):
+    def name(self):
         return "resource_name"
 
     def resource_type(self):
@@ -38,7 +38,7 @@ class CfnTaggedResource(CfnAWSResource):
         CfnAWSResource.__init__(self, vpc)
 
 class CfnVpc(CfnAWSResource):
-    def resource_name(self):
+    def name(self):
         return utils.normalize_name(self.api_response['vpcId'])
 
     def resource_type(self):
@@ -49,7 +49,7 @@ class CfnInternetGateWay(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response)
         self.cfn_vpc = cfn_vpc
 
-    def resource_name(self):
+    def name(self):
         return utils.normalize_name(self.api_response['internetGatewayId'])
 
     def resource_type(self):
@@ -69,7 +69,7 @@ class CfnSubnet(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response)
         self.cfn_vpc = cfn_vpc
 
-    def resource_name(self):
+    def name(self):
         return utils.normalize_name(self.api_response['subnetId'])
 
     def resource_type(self):
