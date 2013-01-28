@@ -11,3 +11,14 @@ def normalize_name(name):
             ord(u'.'):u'',
             ord(u'-'):u''
             })
+
+def flatten(orgdict, column):
+    import copy
+    pivot = orgdict[column]
+    del(orgdict[column])
+    result = []
+    for p in pivot:
+        copied = copy.deepcopy(orgdict)
+        copied.update(p)
+        result.append(copied)
+    return result
