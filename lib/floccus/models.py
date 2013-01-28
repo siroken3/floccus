@@ -88,45 +88,45 @@ class CfnSubnet(CfnAWSResource):
         return "AWS::EC2::Subnet"
 
 class CfnSecurityGroup(CfnAWSResource):
-    def __init__(self, security_group, cfn_vpc):
-        CfnAWSResource.__init__(self, security_group)
+    def __init__(self, api_response, cfn_vpc):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnRouteTable(CfnTaggedResource):
-    def __init__(self, route_table, cfn_vpc):
-        CfnTaggedResource.__init__(self, route_table)
+    def __init__(self, api_response, cfn_vpc):
+        CfnTaggedResource.__init__(self, api_response)
 
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
-    def __init__(self, route_table_association, cfn_route_table, cfn_subnet):
-        CfnAWSResource.__init__(self, route_table_association)
+    def __init__(self, api_response, cfn_route_table, cfn_subnet):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnRoute(CfnAWSResource):
-    def __init__(self, route, cfn_route_table, cfn_gateway=None, cfn_instance=None, cfn_network_interface=None):
-        CfnAWSResource.__init__(self, route)
+    def __init__(self, api_response, cfn_route_table, cfn_gateway=None, cfn_instance=None, cfn_network_interface=None):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnEC2Instance(CfnTaggedResource):
-    def __init__(self, instance, cfn_subnet):
-        CfnTaggedResource.__init__(self, instance)
+    def __init__(self, api_response cfn_subnet):
+        CfnTaggedResource.__init__(self, api_response)
 
 class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
-    def __init__(self, launch_configuration, cfn_security_groups):
-        CfnAWSResource.__init__(self, launch_configuration)
+    def __init__(self, api_response, cfn_security_groups):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnAutoScalingGroup(CfnTaggedResource):
-    def __init__(self, auto_scaling_group, cfn_launch_configuration, cfn_subnets):
-        CfnTaggedResource.__init__(self, auto_scaling_group)
+    def __init__(self, api_response, cfn_launch_configuration, cfn_subnets):
+        CfnTaggedResource.__init__(self, api_response)
 
 class CfnNotificationConfiguration(CfnAWSResource):
-    def __init__(self, notification_configuration, cfn_auto_scaling_group, cfn_sns_topic):
-        CfnAWSResource.__init__(self, notification_configuration)
+    def __init__(self, api_response, cfn_auto_scaling_group, cfn_sns_topic):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnAutoScalingPolicy(CfnAWSResource):
-    def __init__(self, policy):
-        CfnAWSResource.__init__(self, policy)
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnSnsTopics(CfnAWSResource):
-    def __init__(self, topic, subscriptions):
-        CfnAWSResource.__init__(self, topic)
+    def __init__(self, api_response, subscriptions):
+        CfnAWSResource.__init__(self, api_response)
 
 class CfnDBInstance(CfnAWSResource):
-    def __init__(self, db_instance):
-        CfnAWSResource.__init__(self, db_instance)
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response)
