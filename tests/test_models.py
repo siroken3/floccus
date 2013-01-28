@@ -11,6 +11,12 @@ CfnVpc(
          u'state': u'available',
          u'vpcId': u'vpc-aa7704c3'})
 ]
+internet_gateways = [CfnInternetGateway(
+        {u'attachmentSet': [{u'state': u'available', u'vpcId': u'vpc-aa7704c3'}],
+         u'internetGatewayId': u'igw-a17704c8',
+         u'tagSet': []}
+        , vpcs[0])
+]
 
 def test_vpc():
     vpc = vpcs[0]
@@ -27,11 +33,7 @@ def test_vpc():
     assert result == expects
 
 def test_internetgateway():
-    igw = CfnInternetGateWay(
-        {u'attachmentSet': [{u'state': u'available', u'vpcId': u'vpc-aa7704c3'}],
-         u'internetGatewayId': u'igw-a17704c8',
-         u'tagSet': []}
-        , vpcs[0])
+    igw = internet_gateways[0]
     expects = json.dumps({
             "igwa17704c8": {
                 "Type":"AWS::EC2::InternetGateway",
@@ -41,6 +43,26 @@ def test_internetgateway():
                 }
             }, sort_keys=True)
     result = json.dumps(igw, cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def test_vpcgatewayattachment_internetgateway():
+    vpc = vpcs[0]
+    igw = internet_gateways[0]
+    igwattachment = CfnVpcGatewayAttachment(
+        {u'attachmentSet': [{u'state': u'available',
+                             u'vpcId': u'vpc-aa7704c3'}],
+         u'internetGatewayId': u'igw-a17704c8',
+         u'tagSet': []}, vpc, igw)
+    expects = json.dumps({
+            "vpcaa7704c3igwa17704c8": {
+                "Type": "AWS::EC2::VPCGatewayAttachment",
+                "Properties": {
+                    "VpcId": { "Ref" : "vpcaa7704c3" },
+                    "InternetGatewayId" : { "Ref" : "igwa17704c8" }
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(igwattachment, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
 def test_subnet():
@@ -61,6 +83,7 @@ def test_subnet():
                     "CidrBlock": "10.0.3.0/24",
                     "VpcId": { "Ref": "vpcaa7704c3" }
                     }
-            }}, sort_keys=True)
+                }
+            }, sort_keys=True)
     result = json.dumps(subnet, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
