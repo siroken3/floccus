@@ -121,75 +121,73 @@ def test_security_group_rule_2():
 
 def test_security_group():
     security_group = CfnSecurityGroup(
-        {u'groupDescription': u'External security group',
-         u'groupId': u'sg-28e8f444',
-         u'groupName': u'external-sg',
-         u'ipPermissions': [{u'fromPort': 22,
-                             u'groups': [],
-                             u'ipProtocol': u'tcp',
-                             u'ipRanges': [{u'cidrIp': u'210.128.90.161/32'},
-                                           {u'cidrIp': u'221.186.108.105/32'}],
-                             u'toPort': 22},
-                            {u'fromPort': 80,
-                             u'groups': [],
-                             u'ipProtocol': u'tcp',
-                             u'ipRanges': [{u'cidrIp': u'0.0.0.0/0'}],
-                             u'toPort': 80},
-                            {u'fromPort': 8443,
-                             u'groups': [],
-                             u'ipProtocol': u'tcp',
-                             u'ipRanges': [{u'cidrIp': u'210.128.90.161/32'},
-                                           {u'cidrIp': u'221.186.108.105/32'}],
-                             u'toPort': 8443}],
-         u'ipPermissionsEgress': [{u'groups': [],
-                                   u'ipProtocol': u'-1',
-                                   u'ipRanges': [{u'cidrIp': u'0.0.0.0/0'}]}],
-         u'ownerId': u'478468994184',
-         u'vpcId': u'vpc-aa7704c3'},
+        {'groupDescription': 'External security group',
+         'groupId': 'sg-28e8f444',
+         'groupName': 'external-sg',
+         'ipPermissions': [{'fromPort': 22,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '210.128.90.161/32'},
+                                           {'cidrIp': '221.186.108.105/32'}],
+                             'toPort': 22},
+                            {'fromPort': 80,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '0.0.0.0/0'}],
+                             'toPort': 80},
+                            {'fromPort': 8443,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '210.128.90.161/32'},
+                                           {'cidrIp': '221.186.108.105/32'}],
+                             'toPort': 8443}],
+         'ipPermissionsEgress': [{'groups': [],
+                                   'ipProtocol': '-1',
+                                   'ipRanges': [{'cidrIp': '0.0.0.0/0'}]}],
+         'ownerId': '478468994184',
+         'vpcId': 'vpc-aa7704c3'},
         vpcs[0]
         )
     expects = json.dumps({
-            "vpcaa7704c3externalsgSecurityGroup" : {
-                "Type" : "AWS::EC2::SecurityGroup",
-                "Properties" : {
-                    "GroupDescription" : "External security group",
-                    "SecurityGroupIngress" : [{
-                            "IpProtocol" : "tcp",
-                            "CidrIp" : "0.0.0.0/0",
-                            "FromPort" : "80",
-                            "ToPort" : "80"
-                            },{
-                            "IpProtocol" : "tcp",
-                            "CidrIp" : "210.128.90.161/32",
-                            "FromPort" : "22",
-                            "ToPort" : "22"
-                            },{
-                            "IpProtocol" : "tcp",
-                            "CidrIp" : "221.186.108.105/32",
-                            "FromPort" : "22",
-                            "ToPort" : "22"
-                            },{
-                            "IpProtocol" : "tcp",
-                            "CidrIp" : "210.128.90.161/32",
-                            "FromPort" : "8443",
-                            "ToPort" : "8443"
-                            },{
-                            "IpProtocol" : "tcp",
-                            "CidrIp" : "221.186.108.105/32",
-                            "FromPort" : "8443",
-                            "ToPort" : "8443"
-                            }],
-                    "SecurityGroupEgress" : [{
-                            "IpProtocol" : "-1",
-                            "CidrIp" : "0.0.0.0/0",
-                            "FromPort" : "0",
-                            "ToPort" : "65536"
-                            }],
-                    "VpcId" : { "Ref" : "vpcaa7704c3" }
-                    }
-                }}, sort_keys=True)
+        "vpcaa7704c3externalsgSecurityGroup" : {
+            "Type" : "AWS::EC2::SecurityGroup",
+            "Properties" : {
+                "GroupDescription" : "External security group",
+                "SecurityGroupIngress" : [{
+                        "IpProtocol" : "tcp",
+                        "CidrIp" : "210.128.90.161/32",
+                        "FromPort" : "22",
+                        "ToPort" : "22"
+                        },{
+                        "IpProtocol" : "tcp",
+                        "CidrIp" : "221.186.108.105/32",
+                        "FromPort" : "22",
+                        "ToPort" : "22"
+                        },{
+                        "IpProtocol" : "tcp",
+                        "CidrIp" : "0.0.0.0/0",
+                        "FromPort" : "80",
+                        "ToPort" : "80"
+                        },{
+                        "IpProtocol" : "tcp",
+                        "CidrIp" : "210.128.90.161/32",
+                        "FromPort" : "8443",
+                        "ToPort" : "8443"
+                        },{
+                        "IpProtocol" : "tcp",
+                        "CidrIp" : "221.186.108.105/32",
+                        "FromPort" : "8443",
+                        "ToPort" : "8443"
+                        }],
+                "SecurityGroupEgress" : [{
+                        "IpProtocol" : "-1",
+                        "CidrIp" : "0.0.0.0/0",
+                        "FromPort" : "0",
+                        "ToPort" : "65536"
+                        }],
+                "VpcId" : { "Ref" : "vpcaa7704c3" }
+                }
+            }}, sort_keys=True)
     result = json.dumps(security_group, cls=CfnJsonEncoder, sort_keys=True)
-    print "expects = " + expects
-    print "result = " + result
     assert result == expects
 
