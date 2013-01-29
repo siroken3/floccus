@@ -87,8 +87,40 @@ def test_subnet():
     result = json.dumps(subnet, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
+def test_security_group_rule_1():
+    group_rule = CfnSecurityGroupRulePropertyType({
+            u'fromPort': 80,
+            u'groups': [],
+            u'ipProtocol': u'tcp',
+            u'cidrIp': u'0.0.0.0/0',
+            u'toPort': 80})
+    expects = json.dumps({
+            "IpProtocol" : "tcp",
+            "CidrIp" : "0.0.0.0/0",
+            "FromPort" : "80",
+            "ToPort" : "80"
+            }, sort_keys=True)
+    result = json.dumps(group_rule, cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def test_security_group_rule_2():
+    group_rule = CfnSecurityGroupRulePropertyType({
+            u'fromPort': 80,
+            u'groups': [],
+            u'ipProtocol': u'tcp',
+            u'cidrIp': u'0.0.0.0/0',
+            u'toPort': 80})
+    expects = json.dumps({
+            "IpProtocol" : "tcp",
+            "CidrIp" : "0.0.0.0/0",
+            "FromPort" : "80",
+            "ToPort" : "80"
+            }, sort_keys=True)
+    result = json.dumps(group_rule, cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
 def test_security_group():
-    security_groups = CfnSecurityGroup(
+    security_group = CfnSecurityGroup(
         {u'groupDescription': u'External security group',
          u'groupId': u'sg-28e8f444',
          u'groupName': u'external-sg',
@@ -156,6 +188,8 @@ def test_security_group():
                     "VpcId" : { "Ref" : "vpcaa7704c3" }
                     }
                 }}, sort_keys=True)
-    result = json.dumps(security_groups, cls=CfnJsonEncoder, sort_keys=True)
+    result = json.dumps(security_group, cls=CfnJsonEncoder, sort_keys=True)
+    print "expects = " + expects
+    print "result = " + result
     assert result == expects
 
