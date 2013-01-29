@@ -6,16 +6,15 @@ import data
 
 class CfnJsonEncoder(JSONEncoder):
     def default(self, o):
-        if isinstance(o, CfnAWSResource):
-            return {
-                o.name(): {
-                    "Type": o.resource_type(),
-                    "Properties": o.resource_properties()
-                    }
-                }
+        if isinstance(o, CfnAWSObject):
+            return o.to_json()
         return JSONEncoder.default(self, o)
 
-class CfnAWSResource(object):
+class CfnAWSObject(object):
+    def to_json(self):
+        pass
+
+class CfnAWSResource(CfnAWSObject):
     def __init__(self, api_response):
         self.api_response = api_response
 
@@ -30,7 +29,15 @@ class CfnAWSResource(object):
             properties[property_name] = eval(property_value)
         return properties
 
-class CfnAWSResourceRef():
+    def to_json(self):
+        return {
+            self.name(): {
+                "Type": self.resource_type(),
+                "Properties": self.resource_properties()
+                }
+            }
+
+class CfnAWSResourceRef(CfnAWSObject):
     def __init__(self, cfn_resource):
         self.cfn_resource = cfn_resource
 
@@ -87,20 +94,20 @@ class CfnSubnet(CfnAWSResource):
     def resource_type(self):
         return "AWS::EC2::Subnet"
 
-class CfnSecurityGroup(CfnAWSResource):
-    class RulePropertyType:
-        def __init__(self, api_response):
-            self.api_response = api_response
+class CfnSecurityGroupRulePropertyType(CfnAWSObject):
+    def __init__(self, api_response):
+        self.api_response = api_response
 
+class CfnSecurityGroup(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response)
         self.vpc = CfnAWSResourceRef(cfn_vpc)
         for ipPermission in api_response['ipPermissions']:
             ingresses = utils.flatten(ipPermission, 'ipRanges')
-            self.ipPermissions = [self.RulePropertyType(ingress) for ingress in ingresses]
+            self.ipPermissions = [CfnSecurityGroupRulePropertyType(ingress) for ingress in ingresses]
         for ipPermission in api_response['ipPermissionsEgress']:
             egresses = utils.flatten(ipPermission, 'ipRanges')
-            self.ipPermissionEgress = [self.RulePropertyType(egress) for egress in egresses]
+            self.ipPermissionEgress = [CfnSecurityGroupRulePropertyType(egress) for egress in egresses]
 
     def cfn_id(self):
         return self.vpc.cfn_id() + self.api_response['groupDescription'] + "SecurityGroup"
