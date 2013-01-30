@@ -192,3 +192,44 @@ def test_security_group():
     result = json.dumps(security_group, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
+def test_route_table():
+    route_table = CfnRouteTable(
+        {u'associationSet': [{u'main': True,
+                              u'routeTableAssociationId': u'rtbassoc-af7704c6',
+                              u'routeTableId': u'rtb-ac7704c5'}],
+         u'routeSet': [{u'destinationCidrBlock': u'192.168.3.110/32',
+                        u'networkInterfaceId': u'eni-bf8bf0d6',
+                        u'state': u'blackhole'},
+                       {u'destinationCidrBlock': u'192.168.5.100/32',
+                        u'instanceId': u'i-e80c68eb',
+                        u'instanceOwnerId': u'478468994184',
+                        u'networkInterfaceId': u'eni-e02c6a89',
+                        u'state': u'active'},
+                       {u'destinationCidrBlock': u'192.168.3.100/32',
+                        u'instanceId': u'i-36711635',
+                        u'instanceOwnerId': u'478468994184',
+                        u'networkInterfaceId': u'eni-ead89e83',
+                        u'state': u'active'},
+                       {u'destinationCidrBlock': u'10.0.0.0/16',
+                        u'gatewayId': u'local',
+                        u'state': u'active'},
+                       {u'destinationCidrBlock': u'0.0.0.0/0',
+                        u'instanceId': u'i-6e7ae26d',
+                        u'instanceOwnerId': u'478468994184',
+                        u'networkInterfaceId': u'eni-193a7e70',
+                        u'state': u'active'}],
+         u'routeTableId': u'rtb-ac7704c5',
+         u'tagSet': [{u'Key':u'Role', u'Value':u'Test Instance'}],
+         u'vpcId': u'vpc-aa7704c3'},
+        vpcs[0])
+    expects = json.dumps({
+            "rtbac7704c5": {
+                "Type": "AWS::EC2::RouteTable",
+                "Properties": {
+                    "VpcId" : { "Ref": "vpcaa7704c3" },
+                    "Tags" : [{"Key":"Role", "Value": "Test Instance"}]
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(route_table, cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
