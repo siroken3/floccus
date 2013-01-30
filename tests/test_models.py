@@ -14,8 +14,7 @@ CfnVpc(
 internet_gateways = [CfnInternetGateway(
         {u'attachmentSet': [{u'state': u'available', u'vpcId': u'vpc-aa7704c3'}],
          u'internetGatewayId': u'igw-a17704c8',
-         u'tagSet': []}
-        , vpcs[0])
+         u'tagSet': []})
 ]
 
 def test_vpc():
@@ -62,6 +61,8 @@ def test_vpcattachment_internetgateway():
                 }
             }, sort_keys=True)
     result = json.dumps(igwattachment, cls=CfnJsonEncoder, sort_keys=True)
+    print "expects = " + expects
+    print "result  = " + result
     assert result == expects
 
 def test_subnet():

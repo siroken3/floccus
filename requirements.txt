@@ -1,0 +1,6 @@
+botocore==0.4.2
+py==1.4.12
+pytest==2.3.4
+python-dateutil==2.1
+requests==0.14.1
+six==1.2.0

@@ -2,7 +2,6 @@
 
 from json import JSONEncoder
 import utils
-import data
 
 class CfnJsonEncoder(JSONEncoder):
     def default(self, o):
@@ -11,28 +10,52 @@ class CfnJsonEncoder(JSONEncoder):
         return JSONEncoder.default(self, o)
 
 class CfnAWSObject(object):
+
     def _cfn_expr(self):
         pass
 
-class CfnAWSResource(CfnAWSObject):
+class CfnAWSApiResponse(CfnAWSObject):
     def __init__(self, api_response):
-        self.api_response = api_response
+        self.__api_response = api_response
+
+    def _has_api_response(self, key):
+        return self.__api_response.has_key(key)
+
+    def _get_api_response(self, name):
+        return self.__api_response[name]
+
+    def _resource_properties(self):
+        properties = {}
+        entrykeys = [p for p in dir(self) if not p.startswith('_')]
+        for entrykey in entrykeys:
+            try:
+                properties[entrykey] = getattr(self, entrykey)
+            except KeyError:
+                pass
+        return properties
+
+class CfnAWSResource(CfnAWSApiResponse):
+    def __init__(self, api_response, resource_type):
+        CfnAWSApiResponse.__init__(self, api_response)
+        self._resource_type = resource_type
 
     def _name(self):
         return utils.normalize_name(self._cfn_id())
 
     def _resource_properties(self):
         properties = {}
-        propertymap = data.cfn_properties[self._resource_type()]
-        for api_key,cfn_property in propertymap.items():
-            property_name, property_value = cfn_property
-            properties[property_name] = eval(property_value)
+        entrykeys = [p for p in dir(self) if not p.startswith('_')]
+        for entrykey in entrykeys:
+            try:
+                properties[entrykey] = getattr(self, entrykey)
+            except KeyError:
+                pass
         return properties
 
     def _cfn_expr(self):
         return {
             self._name(): {
-                "Type": self._resource_type(),
+                "Type": self._resource_type,
                 "Properties": self._resource_properties()
                 }
             }
@@ -52,105 +75,135 @@ class CfnTaggedResource(CfnAWSResource):
         CfnAWSResource.__init__(self, vpc)
 
 class CfnVpc(CfnAWSResource):
-    def _cfn_id(self):
-        return self.api_response['vpcId']
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, 'AWS::EC2::VPC')
 
-    def _resource_type(self):
-        return "AWS::EC2::VPC"
+    def _cfn_id(self):
+        return self._get_api_response('vpcId')
+
+    @property
+    def CidrBlock(self):
+        return self._get_api_response('cidrBlock')
+
+    @property
+    def InstanceTenancy(self):
+        return self._get_api_response('instanceTenancy')
+
 
 class CfnInternetGateway(CfnAWSResource):
-    def __init__(self, api_response, cfn_vpc):
-        CfnAWSResource.__init__(self, api_response)
-        self.vpc = CfnAWSResourceRef(cfn_vpc)
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, "AWS::EC2::InternetGateway")
 
     def _cfn_id(self):
-        return self.api_response['internetGatewayId']
+        return self._get_api_response('internetGatewayId')
 
-    def _resource_type(self):
-        return "AWS::EC2::InternetGateway"
+    @property
+    def Tags(self):
+        return self._get_api_response('tagSet')
 
 class CfnInternetGatewayAttachment(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc, cfn_internet_gateways):
-        CfnAWSResource.__init__(self, api_response)
-        self.vpc = CfnAWSResourceRef(cfn_vpc)
+        CfnAWSResource.__init__(self, api_response, "AWS::EC2::VPCGatewayAttachment")
+        self.__vpc = CfnAWSResourceRef(cfn_vpc)
         for cfn_igw in cfn_internet_gateways:
-            if self.api_response['internetGatewayId'] == cfn_igw._cfn_id():
-                self.internet_gateway = CfnAWSResourceRef(cfn_igw)
+            if self._get_api_response('internetGatewayId') == cfn_igw._cfn_id():
+                self.__internet_gateway = CfnAWSResourceRef(cfn_igw)
+                break
 
     def _cfn_id(self):
-        return self.vpc._cfn_id() + self.internet_gateway._cfn_id()
+        return self.__vpc._cfn_id() + self.__internet_gateway._cfn_id()
 
-    def _resource_type(self):
-        return "AWS::EC2::VPCGatewayAttachment"
+    @property
+    def InternetGatewayId(self):
+        return self.__internet_gateway
+
+    @property
+    def VpcId(self):
+        return self.__vpc
 
 class CfnSubnet(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
-        CfnAWSResource.__init__(self, api_response)
-        self.vpc = CfnAWSResourceRef(cfn_vpc)
+        CfnAWSResource.__init__(self, api_response, "AWS::EC2::Subnet")
+        self.__vpc = CfnAWSResourceRef(cfn_vpc)
 
     def _cfn_id(self):
-        return self.api_response['subnetId']
+        return self._get_api_response('subnetId')
 
-    def _resource_type(self):
-        return "AWS::EC2::Subnet"
+    @property
+    def AvailabilityZone(self):
+        return self._get_api_response('availabilityZone')
 
-class CfnSecurityGroupRulePropertyType(CfnAWSObject):
-    def __init__(self, api_response):
-        self.__api_response = api_response
+    @property
+    def CidrBlock(self):
+        return self._get_api_response('cidrBlock')
 
-    def _resource_properties(self):
-        properties = {}
-        entrykeys = [p for p in dir(self) if not p.startswith('_')]
-        for entrykey in entrykeys:
-            try:
-                properties[entrykey] = getattr(self, entrykey)
-            except KeyError:
-                pass
-        return properties
+    @property
+    def VpcId(self):
+        return self.__vpc
 
+class CfnSecurityGroupRulePropertyType(CfnAWSApiResponse):
     def _cfn_expr(self):
         return self._resource_properties()
 
     @property
     def IpProtocol(self):
-        return self.__api_response['ipProtocol']
+        return self._get_api_response('ipProtocol')
 
     @property
     def CidrIp(self):
-        return self.__api_response['cidrIp']
+        return self._get_api_response('cidrIp')
 
     @property
     def FromPort(self):
-        if self.__api_response.has_key('fromPort'):
-            return str(self.__api_response['fromPort'])
+        if self._has_api_response('fromPort'):
+            return str(self._get_api_response('fromPort'))
         else:
             return "0"
 
     @property
     def ToPort(self):
-        if self.__api_response.has_key('toPort'):
-            return str(self.__api_response['toPort'])
+        if self._has_api_response('toPort'):
+            return str(self._get_api_response('toPort'))
         else:
             return "65536"
 
 class CfnSecurityGroup(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
-        CfnAWSResource.__init__(self, api_response)
-        self.vpc = CfnAWSResourceRef(cfn_vpc)
+        CfnAWSResource.__init__(self, api_response, "AWS::EC2::SecurityGroup")
+
+        # vpcId
+        self.__vpc = CfnAWSResourceRef(cfn_vpc)
+
+        # ipPermissions
         ingresses = []
         for ipPermission in api_response['ipPermissions']:
             ingresses.extend(utils.flatten(ipPermission, 'ipRanges'))
-        self.ipPermissions = [CfnSecurityGroupRulePropertyType(ingress) for ingress in ingresses]
+        self.__ipPermissions = [CfnSecurityGroupRulePropertyType(ingress) for ingress in ingresses]
+
+        # ipPermissionEgress
         egresses = []
         for ipPermission in api_response['ipPermissionsEgress']:
             egresses.extend(utils.flatten(ipPermission, 'ipRanges'))
-        self.ipPermissionEgress = [CfnSecurityGroupRulePropertyType(egress) for egress in egresses]
+        self.__ipPermissionEgress = [CfnSecurityGroupRulePropertyType(egress) for egress in egresses]
 
     def _cfn_id(self):
-        return self.vpc._cfn_id() + self.api_response['groupName'] + "SecurityGroup"
+        return self.__vpc._cfn_id() + self._get_api_response('groupName') + "SecurityGroup"
 
-    def _resource_type(self):
-        return "AWS::EC2::SecurityGroup"
+    @property
+    def GroupDescription(self):
+        return self._get_api_response('groupDescription')
+
+    @property
+    def SecurityGroupIngress(self):
+        return self.__ipPermissions
+
+    @property
+    def SecurityGroupEgress(self):
+        return self.__ipPermissionEgress
+
+    @property
+    def VpcId(self):
+        return self.__vpc
 
 class CfnRouteTable(CfnTaggedResource):
     def __init__(self, api_response, cfn_vpc):
