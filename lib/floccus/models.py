@@ -224,7 +224,7 @@ class CfnRouteTable(CfnAWSResource):
     def Tags(self):
         return self._get_api_response('tagSet')
 
-class CfnBlockDeviceMappingPropertyType(CfnAWSDataType):
+class CfnBlockDeviceMappingProperty(CfnAWSDataType):
     def __init__(self, api_response):
         CfnAWSDataType.__init__(self, api_response)
 
@@ -245,7 +245,7 @@ class CfnBlockDeviceMappingPropertyType(CfnAWSDataType):
         pass
 
 
-class CfnMountPointPropertyType(CfnAWSDataType):
+class CfnMountPointProperty(CfnAWSDataType):
     def __init__(self, api_response):
         CfnAWSDataType.__init__(self, api_response)
 
@@ -303,7 +303,10 @@ class CfnEC2NetworkInterface(CfnAWSResource):
         pass
 
 class CfnEC2Instance(CfnAWSResource):
-    def __init__(self, api_response, cfn_subnet):
+    def __init__(self,
+                 api_response,
+                 cfn_subnet,
+                 cfn_instance_profile):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::Instance")
         self._subnet = CfnAWSResourceRef
 

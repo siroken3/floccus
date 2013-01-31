@@ -192,6 +192,12 @@ def test_security_group():
     result = json.dumps(security_group, cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
+def test_instance():
+    instance = CfnEC2Instance({})
+    expects = json.dumps({},sort_keys=True)
+    result = json.dumps(instance, cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
 def test_route_table():
     route_table = CfnRouteTable(
         {u'associationSet': [{u'main': True,
