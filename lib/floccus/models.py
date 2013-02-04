@@ -128,7 +128,7 @@ class CfnInternetGatewayAttachment(CfnAWSResource):
         return self._vpc
 
 
-class CfnSubnet(CfnAWSResource):
+class CfnEC2Subnet(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::Subnet")
         self.__vpc = CfnAWSResourceRef(cfn_vpc)
@@ -148,45 +148,45 @@ class CfnSubnet(CfnAWSResource):
     def VpcId(self):
         return self.__vpc
 
-class CfnSecurityGroupRulePropertyType(CfnAWSDataType):
-    def _cfn_expr(self):
-        return self._resource_properties()
 
-    @property
-    def IpProtocol(self):
-        return self._get_api_response('ipProtocol')
+class CfnEC2SecurityGroup(CfnAWSResource):
+    class _CfnEC2SecurityGroupRulePropertyType(CfnAWSDataType):
+        def _cfn_expr(self):
+            return self._resource_properties()
 
-    @property
-    def CidrIp(self):
-        return self._get_api_response('cidrIp')
+        @property
+        def IpProtocol(self):
+            return self._get_api_response('ipProtocol')
 
-    @property
-    def FromPort(self):
-        if self._has_api_response('fromPort'):
-            return str(self._get_api_response('fromPort'))
-        else:
-            return "0"
+        @property
+        def CidrIp(self):
+            return self._get_api_response('cidrIp')
 
-    @property
-    def ToPort(self):
-        if self._has_api_response('toPort'):
-            return str(self._get_api_response('toPort'))
-        else:
-            return "65536"
+        @property
+        def FromPort(self):
+            if self._has_api_response('fromPort'):
+                return str(self._get_api_response('fromPort'))
+            else:
+                return "0"
 
+        @property
+        def ToPort(self):
+            if self._has_api_response('toPort'):
+                return str(self._get_api_response('toPort'))
+            else:
+                return "65536"
 
-class CfnSecurityGroup(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::SecurityGroup")
         self._vpc = CfnAWSResourceRef(cfn_vpc)
         ingresses = []
         for ipPermission in api_response['ipPermissions']:
             ingresses.extend(utils.flatten(ipPermission, 'ipRanges'))
-        self._ipPermissions = [CfnSecurityGroupRulePropertyType(ingress) for ingress in ingresses]
+        self._ipPermissions = [self._CfnEC2SecurityGroupRulePropertyType(ingress) for ingress in ingresses]
         egresses = []
         for ipPermission in api_response['ipPermissionsEgress']:
             egresses.extend(utils.flatten(ipPermission, 'ipRanges'))
-        self._ipPermissionEgress = [CfnSecurityGroupRulePropertyType(egress) for egress in egresses]
+        self._ipPermissionEgress = [self._CfnEC2SecurityGroupRulePropertyType(egress) for egress in egresses]
 
     def _cfn_id(self):
         return self._vpc._cfn_id() + self._get_api_response('groupName') + "SecurityGroup"
@@ -207,6 +207,9 @@ class CfnSecurityGroup(CfnAWSResource):
     def VpcId(self):
         return self._vpc
 
+class CfnIAMInstanceProfile(CfnAWSResource):
+    def __init__(self, api_response):
+        pass
 
 class CfnRouteTable(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
@@ -224,40 +227,6 @@ class CfnRouteTable(CfnAWSResource):
     def Tags(self):
         return self._get_api_response('tagSet')
 
-class CfnBlockDeviceMappingProperty(CfnAWSDataType):
-    def __init__(self, api_response):
-        CfnAWSDataType.__init__(self, api_response)
-
-    @property
-    def DeviceName(self):
-        pass
-
-    @property
-    def Ebs(self):
-        pass
-
-    @property
-    def NoDevice(self):
-        pass
-
-    @property
-    def VirtualName(self):
-        pass
-
-
-class CfnMountPointProperty(CfnAWSDataType):
-    def __init__(self, api_response):
-        CfnAWSDataType.__init__(self, api_response)
-
-    @property
-    def Device(self):
-        pass
-
-    @property
-    def VolumeId(self):
-        pass
-
-
 class CfnIAMInstanceProfile(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
@@ -273,26 +242,28 @@ class CfnIAMInstanceProfile(CfnAWSResource):
 class CfnEC2NetworkInterface(CfnAWSResource):
     def __init__(self,
                  api_response,
-                 cfn_network_interfaces,
                  cfn_security_groups,
-                 cfn_security_groupIds):
+                 cfn_subnets):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::NetworkInterface")
+
+    def _cfn_id(self):
+        return self._get_api_response('networkInterfaceId')
 
     @property
     def Description(self):
-        pass
+        return self._get_api_response('description')
 
     @property
-    def GoupSet(self):
+    def GroupSet(self):
         pass
 
     @property
     def PrivateIpAddress(self):
-        pass
+        return self._get_api_response('privateIpAddress')
 
     @property
     def SourceDestCheck(self):
-        pass
+        return self._get_api_response('sourceDestCheck')
 
     @property
     def SubnetId(self):
@@ -300,15 +271,55 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def Tags(self):
-        pass
+        return self._get_api_response('tagSet')
 
 class CfnEC2Instance(CfnAWSResource):
+    class _CfnBlockDeviceMapping(CfnAWSDataType):
+        def __init__(self, api_response):
+            CfnAWSDataType.__init__(self, api_response)
+
+        @property
+        def DeviceName(self):
+            pass
+
+        @property
+        def Ebs(self):
+            pass
+
+        @property
+        def NoDevice(self):
+            pass
+
+        @property
+        def VirtualName(self):
+            pass
+
+    class _CfnMountPoint(CfnAWSDataType):
+        def __init__(self, api_response):
+            CfnAWSDataType.__init__(self, api_response)
+
+        @property
+        def Device(self):
+            pass
+
+        @property
+        def VolumeId(self):
+            pass
+
     def __init__(self,
                  api_response,
-                 cfn_subnet,
-                 cfn_instance_profile):
+                 cfn_instance_profiles,
+                 cfn_network_interfaces,
+                 cfn_security_groups,
+                 cfn_subnets):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::Instance")
-        self._subnet = CfnAWSResourceRef
+        self._instance_profile = CfnAWSResourceRef(cfn_instance_profiles)
+        self._network_interfaces = [CfnAWSResourceRef(eni) for eni in cfn_network_interfaces]
+        self._security_groups = [CfnAWSResourceRef(sg) for sg in cfn_security_groups]
+        self._subnet = CfnAWSResourceRef(cfn_subnets)
+
+    def _cfn_id(self):
+        return self._get_api_response('instanceId')
 
     @property
     def AvailabilityZone(self):
@@ -328,7 +339,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def IamInstanceProfile(self):
-        pass
+        return self._instance_profile
 
     @property
     def ImageId(self):
@@ -352,7 +363,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def NetworkInterfaces(self):
-        pass
+        return self._network_interfaces
 
     @property
     def PlacementGroupName(self):
@@ -372,7 +383,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def SecurityGroups(self):
-        pass
+        return self._security_groups
 
     @property
     def SourceDestCheck(self):
@@ -380,7 +391,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def SubnetId(self):
-        pass
+        return self._subnet
 
     @property
     def Tags(self):
