@@ -1,6 +1,6 @@
 # floccus
 
-[![Build Status](https://travis-ci.org/siroken3/floccus.png)](https://travis-ci.org/siroken3/floccus)
+[![Build Status](https://travis-ci.org/siroken3/floccus.png?branch=32_botocore)](https://travis-ci.org/siroken3/floccus)
 
 AWS の CloudFormation が VPC (Virutal Private Cloud) に対応していないので代替として動作するCLIツールです。regionを指定すると標準出力にCloudFormationのJSONファイルを出力します。
 
