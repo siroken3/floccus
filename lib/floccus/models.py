@@ -1,14 +1,14 @@
 # -*- coding:utf-8 -*-
 
-from json import JSONEncoder
-
+import urllib
+import json
 import utils
 
-class CfnJsonEncoder(JSONEncoder):
+class CfnJsonEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, CfnAWSObject):
             return o._cfn_expr()
-        return JSONEncoder.default(self, o)
+        return json.JSONEncoder.default(self, o)
 
 class CfnAWSObject(object):
     def _cfn_expr(self):
@@ -33,6 +33,9 @@ class CfnAWSDataType(CfnAWSObject):
             except KeyError:
                 pass
         return properties
+
+    def _cfn_expr(self):
+        return self._resource_properties()
 
 
 class CfnAWSResource(CfnAWSDataType):
@@ -206,10 +209,6 @@ class CfnEC2SecurityGroup(CfnAWSResource):
     def VpcId(self):
         return self._vpc
 
-class CfnIAMInstanceProfile(CfnAWSResource):
-    def __init__(self, api_response):
-        pass
-
 class CfnRouteTable(CfnAWSResource):
     def __init__(self, api_response, cfn_vpc):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::RouteTable")
@@ -309,15 +308,15 @@ class CfnEC2Instance(CfnAWSResource):
 
     def __init__(self,
                  api_response,
-                 cfn_instance_profiles,
+                 cfn_instance_profile,
                  cfn_network_interfaces,
                  cfn_security_groups,
-                 cfn_subnets):
+                 cfn_subnet):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::Instance")
-        self._instance_profile = CfnAWSResourceRef(cfn_instance_profiles)
+        self._instance_profile = CfnAWSResourceRef(cfn_instance_profile)
         self._network_interfaces = [CfnAWSResourceRef(eni) for eni in cfn_network_interfaces]
         self._security_groups = [CfnAWSResourceRef(sg) for sg in cfn_security_groups]
-        self._subnet = CfnAWSResourceRef(cfn_subnets)
+        self._subnet = CfnAWSResourceRef(cfn_subnet)
 
     def _cfn_id(self):
         return self._get_api_response('instanceId')
@@ -540,7 +539,58 @@ class CfnSNSTopic(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::SNS::Topic")
 
-
 class CfnRDSDBInstance(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::RDS::DBInstance")
+
+class CfnIAMGroup(CfnAWSResource):
+    class _GetGroupPolicyResult(CfnAWSDataType):
+        def __init__(self, api_response):
+            CfnAWSDataType.__init__(self, api_response)
+
+#        def GroupName(self):
+#            return self._get_api_response('GroupName')
+
+        @property
+        def PolicyDocument(self):
+            documentstr = urllib.unquote(self._get_api_response('PolicyDocument'))
+            return json.loads(documentstr)
+
+        @property
+        def PolicyName(self):
+            return self._get_api_response('PolicyName')
+
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Group")
+        self._policies = [self._GetGroupPolicyResult(policy) for policy in self._get_api_response('Policies')]
+
+    def _cfn_id(self):
+        return self._get_api_response('Group')['GroupName']
+
+    @property
+    def Path(self):
+        return self._get_api_response('Group')['Path']
+
+    @property
+    def Policies(self):
+        return self._policies
+
+class CfnIAMInstanceProfile(CfnAWSResource):
+    def __init__(self, api_response, cfn_iam_roles):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
+
+class CfnIAMRole(CfnAWSResource):
+    def __init__(self, api_response, cfn_iam_policies):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Role")
+
+class CfnIAMUser(CfnAWSResource):
+    def __init__(self, api_response, cfn_iam_groups, cfn_iam_policies):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::User")
+
+class CfnIAMUserToGroupAddition(CfnAWSResource):
+    def __init__(self, api_response, cfn_iam_group, cfn_iam_users):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::UserToGroupAddition")
+
+class CfnIAMPolicy(CfnAWSResource):
+    def __init__(self, api_response, cfn_iam_groups, cfn_iam_roles, cfn_iam_users):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Policy")

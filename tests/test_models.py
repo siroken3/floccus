@@ -17,8 +17,6 @@ internet_gateways = [CfnInternetGateway(
          u'tagSet': []})
 ]
 
-instance_profiles = [CfnIAMInstanceProfile({})]
-
 security_groups = [CfnEC2SecurityGroup(
         {'groupDescription': 'External security group',
          'groupId': 'sg-28e8f444',
@@ -52,7 +50,7 @@ subnets = [
     CfnEC2Subnet(
         {u'availabilityZone': u'ap-northeast-1a',
          u'availableIpAddressCount': 249,
-         u'cidrBlock': u'10.0.3.0/24',
+         u'cidrBlock': u'10.0.1.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-78760511',
          u'vpcId': u'vpc-aa7704c3'},
@@ -61,9 +59,18 @@ subnets = [
     CfnEC2Subnet(
         {u'availabilityZone': u'ap-northeast-1a',
          u'availableIpAddressCount': 249,
-         u'cidrBlock': u'10.0.1.0/24',
+         u'cidrBlock': u'10.0.2.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-aa7704c3',
+         u'vpcId': u'vpc-aa7704c3'},
+        vpcs[0]
+        ),
+    CfnEC2Subnet(
+        {u'availabilityZone': u'ap-northeast-1a',
+         u'availableIpAddressCount': 249,
+         u'cidrBlock': u'10.0.3.0/24',
+         u'state': u'available',
+         u'subnetId': u'subnet-6776050e',
          u'vpcId': u'vpc-aa7704c3'},
         vpcs[0]
         )]
@@ -152,7 +159,7 @@ def test_subnet():
                 "Type": "AWS::EC2::Subnet",
                 "Properties": {
                     "AvailabilityZone" : "ap-northeast-1a",
-                    "CidrBlock": "10.0.3.0/24",
+                    "CidrBlock": "10.0.1.0/24",
                     "VpcId": { "Ref": "vpcaa7704c3" }
                     }
                 }
@@ -239,6 +246,138 @@ def test_security_group():
     result = json.dumps(security_groups[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
+iam_groups = [
+    CfnIAMGroup(
+        {
+            u'Group': {
+                u'Arn': u'arn:aws:iam::478468994184:group/as',
+                u'CreateDate': u'2012-12-18T09:31:19Z',
+                u'GroupId': u'321321321321321321321',
+                u'GroupName': u'as',
+                u'Path': u'/',
+                },
+            u'Policies': [
+                {
+                    u'PolicyName': u'policygen-as-YYYYMMDDHHmm',
+                    u'PolicyDocument': u'%7B%0A%20%20%22Statement%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830196941%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22cloudwatch%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830207207%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22autoscaling%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D',
+                    u'GroupName': u'as',
+                    }
+                ]
+            })
+    ]
+
+def test_iam_group():
+    expects = json.dumps({
+            "as": {
+                "Type": "AWS::IAM::Group",
+                "Properties": {
+                    "Path": "/",
+                    "Policies": [{
+                            "PolicyName": "policygen-as-YYYYMMDDHHmm",
+                            "PolicyDocument": {
+                                "Statement": [
+                                    {
+                                        "Sid": "Stmt1355830196941",
+                                        "Action": [
+                                            "cloudwatch:*"
+                                            ],
+                                        "Effect": "Allow",
+                                        "Resource": [
+                                            "*"
+                                            ]
+                                        },
+                                    {
+                                        "Sid": "Stmt1355830207207",
+                                        "Action": [
+                                            "autoscaling:*"
+                                            ],
+                                        "Effect": "Allow",
+                                        "Resource": [
+                                            "*"
+                                            ]
+                                        }
+                                    ]
+                                }
+                        }]
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(iam_groups[0], cls=CfnJsonEncoder, sort_keys=True)
+    print 'result = ', result
+    print 'expects= ', expects
+    assert result == expects
+
+def test_iam_instance_profile():
+    expects = json.dumps({
+            "": {
+                "Type":"AWS::IAM::InstanceProfile",
+                "Properties": {
+                    "Path": "",
+                    "Roles": []
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(instance_profiles[0], cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def test_iam_policy():
+    expects = json.dumps({
+            "": {
+                "Type":"AWS::IAM::Policy",
+                "Properties": {
+                    "Groups": [],
+                    "PolicyDocument" : "",
+                    "PolicyName": "",
+                    "Roles": [],
+                    "Users": [],
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(iam_policies[0], cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def test_iam_role():
+    expects = json.dumps({
+            "": {
+                "Type": "AWS::IAM::Role",
+                "Properties": {
+                    "AssumeRolePolicyDocuement": {},
+                    "Path": "",
+                    "Policies": []
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(iam_roles[0], cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def tset_iam_user():
+    expects = json.dumps({
+            "": {
+                "Type":"AWS::IAM::User",
+                "Properties": {
+                    "Path": "",
+                    "Groups": [],
+                    "LoginProfile": { "Password": "" },
+                    "Policies": []
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(iam_users[0], cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
+def test_iam_usertogroupaddition():
+    expects = json.dumps({
+            "": {
+                "Type":"AWS::IAM::UserToGroupAddition",
+                "Properties": {
+                    "GroupName": "",
+                    "Users": []
+                    }
+                }
+            }, sort_keys=True)
+    result = json.dumps(iam_usetogroupadditions[0], cls=CfnJsonEncoder, sort_keys=True)
+    assert result == expects
+
 def test_networkinterface():
     expects = json.dumps({
             "enid97b08b0": {
@@ -254,8 +393,6 @@ def test_networkinterface():
                 }
             }, sort_keys=True)
     result = json.dumps(network_interfaces[0], cls=CfnJsonEncoder, sort_keys=True)
-    print result
-    print expects
     assert result == expects
 
 
@@ -328,10 +465,10 @@ def _test_instance():
                      {u'key': u'Type', u'value': u'master'}],
          u'virtualizationType': u'paravirtual',
          u'vpcId': u'vpc-aa7704c3'},
-        instance_profiles,
+        instance_profiles[0],
         network_interfaces,
         security_groups,
-        subnets
+        subnets[2]
         )
 
     expects = json.dumps({
@@ -367,8 +504,7 @@ def _test_instance():
                 "Tags": [{"Key":"Env","Value":"prod"},{"Key":"Name","Value":"p001"},{"Key":"Type","Value":"master"}],
                 "Tenancy":"default",
                 "UserData":"",
-                "Volumes": [
-                    ]
+                "Volumes": []
                 }
             },sort_keys=True)
     result = json.dumps(instance, cls=CfnJsonEncoder, sort_keys=True)
