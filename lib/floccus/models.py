@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 
 from json import JSONEncoder
+
 import utils
 
 class CfnJsonEncoder(JSONEncoder):
@@ -9,11 +10,9 @@ class CfnJsonEncoder(JSONEncoder):
             return o._cfn_expr()
         return JSONEncoder.default(self, o)
 
-
 class CfnAWSObject(object):
     def _cfn_expr(self):
         pass
-
 
 class CfnAWSDataType(CfnAWSObject):
     def __init__(self, api_response):
@@ -189,7 +188,7 @@ class CfnEC2SecurityGroup(CfnAWSResource):
         self._ipPermissionEgress = [self._CfnEC2SecurityGroupRulePropertyType(egress) for egress in egresses]
 
     def _cfn_id(self):
-        return self._vpc._cfn_id() + self._get_api_response('groupName') + "SecurityGroup"
+        return self._get_api_response('groupId')
 
     @property
     def GroupDescription(self):
@@ -243,8 +242,10 @@ class CfnEC2NetworkInterface(CfnAWSResource):
     def __init__(self,
                  api_response,
                  cfn_security_groups,
-                 cfn_subnets):
+                 cfn_subnet):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::NetworkInterface")
+        self._security_groups = [CfnAWSResourceRef(sg) for sg in cfn_security_groups]
+        self._subnet = CfnAWSResourceRef(cfn_subnet)
 
     def _cfn_id(self):
         return self._get_api_response('networkInterfaceId')
@@ -255,7 +256,7 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def GroupSet(self):
-        pass
+        return self._security_groups
 
     @property
     def PrivateIpAddress(self):
@@ -267,7 +268,7 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def SubnetId(self):
-        pass
+        return self._subnet
 
     @property
     def Tags(self):

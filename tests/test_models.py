@@ -48,12 +48,22 @@ security_groups = [CfnEC2SecurityGroup(
         vpcs[0]
         )]
 
-subnets = [CfnEC2Subnet(
+subnets = [
+    CfnEC2Subnet(
         {u'availabilityZone': u'ap-northeast-1a',
          u'availableIpAddressCount': 249,
          u'cidrBlock': u'10.0.3.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-78760511',
+         u'vpcId': u'vpc-aa7704c3'},
+        vpcs[0]
+        ),
+    CfnEC2Subnet(
+        {u'availabilityZone': u'ap-northeast-1a',
+         u'availableIpAddressCount': 249,
+         u'cidrBlock': u'10.0.1.0/24',
+         u'state': u'available',
+         u'subnetId': u'subnet-aa7704c3',
          u'vpcId': u'vpc-aa7704c3'},
         vpcs[0]
         )]
@@ -85,10 +95,7 @@ network_interfaces = [CfnEC2NetworkInterface(
          u'subnetId': u'subnet-a77704ce',
          u'tagSet': [],
          u'vpcId': u'vpc-aa7704c3'}
-,security_groups, subnets)]
-
-
-
+,security_groups, subnets[1])]
 
 
 def test_vpc():
@@ -190,7 +197,7 @@ def test_security_group_rule_2():
 def test_security_group():
 
     expects = json.dumps({
-        "vpcaa7704c3externalsgSecurityGroup" : {
+        "sg28e8f444" : {
             "Type" : "AWS::EC2::SecurityGroup",
             "Properties" : {
                 "GroupDescription" : "External security group",
@@ -234,14 +241,14 @@ def test_security_group():
 
 def test_networkinterface():
     expects = json.dumps({
-            "enod97b08b0": {
+            "enid97b08b0": {
                 "Type": "AWS::EC2::NetworkInterface",
                 "Properties":{
                     "Description": "ELB keshin-stg",
                     "GroupSet": [ {"Ref":"sg28e8f444"} ],
                     "PrivateIpAddress": "10.0.0.31",
                     "SourceDestCheck": True,
-                    "SubnetId": {"Ref":"subneta77704ce"},
+                    "SubnetId": {"Ref":"subnetaa7704c3"},
                     "Tags": []
                     }
                 }

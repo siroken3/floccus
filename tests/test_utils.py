@@ -41,3 +41,9 @@ def test_flatten_2():
             },
         ]
     assert result == expect
+
+def test_normalize_name():
+    org = "sg-12e12123"
+    result = normalize_name(org)
+    expect = "sg12e12123"
+    assert result == expect

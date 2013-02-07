@@ -4,11 +4,10 @@ import os
 import argparse
 
 import botocore.session
-from botocore.session import EnviromnentVariables
 
 from models import *
 
-class Floccus:
+class Floccus(object):
 
     def __init__(self, access_key, secret_key, region_name='us-east-1'):
         if access_key is not None:

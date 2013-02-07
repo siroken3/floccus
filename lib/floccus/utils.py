@@ -3,14 +3,10 @@
 import os
 import json
 import string
+import re
 
 def normalize_name(name):
-    return name.translate({
-            ord(u'/'):u'',
-            ord(u'-'):u'',
-            ord(u'.'):u'',
-            ord(u'-'):u''
-            })
+    return re.sub(r'[/\-\._]','', name)
 
 def flatten(orgdict, column):
     import copy
