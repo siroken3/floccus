@@ -226,16 +226,17 @@ class CfnRouteTable(CfnAWSResource):
         return self._get_api_response('tagSet')
 
 class CfnIAMInstanceProfile(CfnAWSResource):
-    def __init__(self, api_response):
+    def __init__(self, api_response, cfn_iam_roles):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
+        self._roles = [CfnAWSResourceRef(role) for role in cfn_iam_roles]
 
     @property
     def Path(self):
-        pass
+        return self._get_api_response('Path')
 
     @property
     def Roles(self):
-        pass
+        return self._roles
 
 class CfnEC2NetworkInterface(CfnAWSResource):
     def __init__(self,
@@ -580,17 +581,29 @@ class CfnIAMInstanceProfile(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
 
 class CfnIAMRole(CfnAWSResource):
-    def __init__(self, api_response, cfn_iam_policies):
+    def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::Role")
 
+    def _cfn_id(self):
+        return self._get_api_response('RoleName')
+
+    @property
+    def AssumeRolePolicyDocument(self):
+        documentstr = urllib.unquote(self._get_api_response('AssumeRolePolicDocument'))
+        return json.loads(documentstr)
+
+    @property
+    def Path(self):
+        return self._get_api_response('Path')
+
+    @property
+    def Policies(self):
+        pass
+
 class CfnIAMUser(CfnAWSResource):
-    def __init__(self, api_response, cfn_iam_groups, cfn_iam_policies):
+    def __init__(self, api_response, cfn_iam_groups):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::User")
 
 class CfnIAMUserToGroupAddition(CfnAWSResource):
     def __init__(self, api_response, cfn_iam_group, cfn_iam_users):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::UserToGroupAddition")
-
-class CfnIAMPolicy(CfnAWSResource):
-    def __init__(self, api_response, cfn_iam_groups, cfn_iam_roles, cfn_iam_users):
-        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Policy")

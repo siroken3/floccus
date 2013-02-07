@@ -104,6 +104,55 @@ network_interfaces = [CfnEC2NetworkInterface(
          u'vpcId': u'vpc-aa7704c3'}
 ,security_groups, subnets[1])]
 
+iam_groups = [
+    CfnIAMGroup(
+        {
+            u'Group': {
+                u'Arn': u'arn:aws:iam::478468994184:group/as',
+                u'CreateDate': u'2012-12-18T09:31:19Z',
+                u'GroupId': u'321321321321321321321',
+                u'GroupName': u'as',
+                u'Path': u'/',
+                },
+            u'Policies': [
+                {
+                    u'PolicyName': u'policygen-as-YYYYMMDDHHmm',
+                    u'PolicyDocument': u'%7B%0A%20%20%22Statement%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830196941%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22cloudwatch%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830207207%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22autoscaling%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D',
+                    u'GroupName': u'as',
+                    }
+                ]
+            })
+    ]
+
+iam_roles = [CfnIAMRole(
+        {u'Arn': u'arn:aws:iam::478468994184:role/LogServerRole',
+         u'AssumeRolePolicyDocument': u'%7B%22Version%22%3A%222008-10-17%22%2C%22Statement%22%3A%5B%7B%22Sid%22%3A%22%22%2C%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22ec2.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D',
+         u'CreateDate': u'2012-11-19T12:38:03Z',
+         u'Path': u'/',
+         u'RoleId': u'AROAJ25JKW56LCC73JH74',
+         u'RoleName': u'LogServerRole'})
+]
+
+iam_users = [CfnIAMUser({}, iam_groups)
+]
+
+instance_profiles = [
+    CfnIAMInstanceProfile(
+        {u'Arn': u'arn:aws:iam::478468994184:instance-profile/LogServerRole',
+         u'CreateDate': u'2012-11-19T12:38:03Z',
+         u'InstanceProfileId': u'AIPAJH73JAVIVURJU6RP6',
+         u'InstanceProfileName': u'LogServerRole',
+         u'Path': u'/',
+         u'Roles': [{u'Arn': u'arn:aws:iam::478468994184:role/LogServerRole',
+                     u'AssumeRolePolicyDocument': u'%7B%22Version%22%3A%222008-10-17%22%2C%22Statement%22%3A%5B%7B%22Sid%22%3A%22%22%2C%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22ec2.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D',
+                     u'CreateDate': u'2012-11-19T12:38:03Z',
+                     u'Path': u'/',
+                     u'RoleId': u'AROAJ25JKW56LCC73JH74',
+                     u'RoleName': u'LogServerRole'}
+                    ]}, iam_roles)
+]
+
+iam_usertogroupadditions = []
 
 def test_vpc():
     vpc = vpcs[0]
@@ -246,25 +295,6 @@ def test_security_group():
     result = json.dumps(security_groups[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
-iam_groups = [
-    CfnIAMGroup(
-        {
-            u'Group': {
-                u'Arn': u'arn:aws:iam::478468994184:group/as',
-                u'CreateDate': u'2012-12-18T09:31:19Z',
-                u'GroupId': u'321321321321321321321',
-                u'GroupName': u'as',
-                u'Path': u'/',
-                },
-            u'Policies': [
-                {
-                    u'PolicyName': u'policygen-as-YYYYMMDDHHmm',
-                    u'PolicyDocument': u'%7B%0A%20%20%22Statement%22%3A%20%5B%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830196941%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22cloudwatch%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%2C%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%22Sid%22%3A%20%22Stmt1355830207207%22%2C%0A%20%20%20%20%20%20%22Action%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22autoscaling%3A%2A%22%0A%20%20%20%20%20%20%5D%2C%0A%20%20%20%20%20%20%22Effect%22%3A%20%22Allow%22%2C%0A%20%20%20%20%20%20%22Resource%22%3A%20%5B%0A%20%20%20%20%20%20%20%20%22%2A%22%0A%20%20%20%20%20%20%5D%0A%20%20%20%20%7D%0A%20%20%5D%0A%7D',
-                    u'GroupName': u'as',
-                    }
-                ]
-            })
-    ]
 
 def test_iam_group():
     expects = json.dumps({
@@ -309,31 +339,15 @@ def test_iam_group():
 
 def test_iam_instance_profile():
     expects = json.dumps({
-            "": {
+            "LogServerRole": {
                 "Type":"AWS::IAM::InstanceProfile",
                 "Properties": {
-                    "Path": "",
-                    "Roles": []
+                    "Path": "/",
+                    "Roles": [{"Ref": "LogServerRole"}]
                     }
                 }
             }, sort_keys=True)
     result = json.dumps(instance_profiles[0], cls=CfnJsonEncoder, sort_keys=True)
-    assert result == expects
-
-def test_iam_policy():
-    expects = json.dumps({
-            "": {
-                "Type":"AWS::IAM::Policy",
-                "Properties": {
-                    "Groups": [],
-                    "PolicyDocument" : "",
-                    "PolicyName": "",
-                    "Roles": [],
-                    "Users": [],
-                    }
-                }
-            }, sort_keys=True)
-    result = json.dumps(iam_policies[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
 def test_iam_role():
@@ -375,7 +389,7 @@ def test_iam_usertogroupaddition():
                     }
                 }
             }, sort_keys=True)
-    result = json.dumps(iam_usetogroupadditions[0], cls=CfnJsonEncoder, sort_keys=True)
+    result = json.dumps(iam_usertogroupadditions[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
 def test_networkinterface():
