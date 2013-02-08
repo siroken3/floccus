@@ -152,8 +152,6 @@ instance_profiles = [
                     ]}, iam_roles)
 ]
 
-iam_usertogroupadditions = []
-
 def test_vpc():
     vpc = vpcs[0]
     expects = json.dumps({
@@ -352,11 +350,17 @@ def test_iam_instance_profile():
 
 def test_iam_role():
     expects = json.dumps({
-            "": {
+            "LogServerRole": {
                 "Type": "AWS::IAM::Role",
                 "Properties": {
-                    "AssumeRolePolicyDocuement": {},
-                    "Path": "",
+                    "AssumeRolePolicyDocument": {
+                        "Statement": [
+                            {"Action": "sts:AssumeRole", "Effect": "Allow",
+                             "Principal": {"Service": "ec2.amazonaws.com"},
+                             "Sid": ""}],
+                        "Version": "2008-10-17"
+                        },
+                    "Path": "/",
                     "Policies": []
                     }
                 }
@@ -377,19 +381,6 @@ def tset_iam_user():
                 }
             }, sort_keys=True)
     result = json.dumps(iam_users[0], cls=CfnJsonEncoder, sort_keys=True)
-    assert result == expects
-
-def test_iam_usertogroupaddition():
-    expects = json.dumps({
-            "": {
-                "Type":"AWS::IAM::UserToGroupAddition",
-                "Properties": {
-                    "GroupName": "",
-                    "Users": []
-                    }
-                }
-            }, sort_keys=True)
-    result = json.dumps(iam_usertogroupadditions[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
 def test_networkinterface():
