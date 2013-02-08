@@ -418,7 +418,7 @@ def test_networkinterface():
                 "Type": "AWS::EC2::NetworkInterface",
                 "Properties":{
                     "Description": "ELB keshin-stg",
-                    "GroupSet": [ {"Ref":"sg28e8f444"} ],
+                    "GroupSet": [ {"Ref":"sg28e8f444"}, {"Ref":"sg2ce8f440"} ],
                     "PrivateIpAddress": "10.0.0.31",
                     "SourceDestCheck": True,
                     "SubnetId": {"Ref":"subnetaa7704c3"},
@@ -427,6 +427,9 @@ def test_networkinterface():
                 }
             }, sort_keys=True)
     result = json.dumps(network_interfaces[0], cls=CfnJsonEncoder, sort_keys=True)
+    print "expect = ", expects
+    print ""
+    print "result = ", result
     assert result == expects
 
 
@@ -458,7 +461,7 @@ def test_instance():
          u'instanceType': u'm1.small',
          u'ipAddress': u'54.249.46.150',
          u'kernelId': u'aki-40992841',
-         u'keyName': u'katatema',
+         u'keyName': u'keyName',
          u'launchTime': u'2012-11-20T10:00:23.000Z',
          u'monitoring': {u'state': u'disabled'},
          u'networkInterfaceSet': [{u'association': {u'ipOwnerId': u'478468994184',
@@ -498,7 +501,10 @@ def test_instance():
                      {u'key': u'Name', u'value': u'p001'},
                      {u'key': u'Type', u'value': u'master'}],
          u'virtualizationType': u'paravirtual',
-         u'vpcId': u'vpc-aa7704c3'},
+         u'vpcId': u'vpc-aa7704c3',
+         u'userData': u'',
+         u'disableApiTermination':False,
+         u'EbsOptimized': False},
         instance_profiles[0],
         network_interfaces,
         security_groups,
@@ -521,14 +527,15 @@ def test_instance():
                                 "DeleteOnTermination" : True,
                                 },
                             }],
-                    "EBSOptimized": False,
+                    "DisableApiTermination": False,
+                    "EbsOptimized": False,
                     "IamInstanceProfile": { "Ref": "LogServerRole" },
                     "ImageId": "ami-7855ec79",
                     "InstanceType": "m1.small",
                     "KernelId": "aki-40992841",
-                    "KeyName": "katatema",
+                    "KeyName": "keyName",
                     "Monitoring": False,
-                    "NetworkInterfaces": [{"Ref":"eni4aa6d523"}],
+                    "NetworkInterfaces": [{"Ref":"enid97b08b0"}],
                     "PlacementGroupName": "",
                     "PrivateIpAddress":"10.0.1.4",
                     "RamdiskId":"ramdisk",
@@ -536,7 +543,7 @@ def test_instance():
                     "SecurityGroups":[],
                     "SourceDestCheck": True,
                     "SubnetId":{ "Ref": "subnet6776050e"},
-                    "Tags": [{"Key":"Env","Value":"prod"},{"Key":"Name","Value":"p001"},{"Key":"Type","Value":"master"}],
+                    "Tags": [{"key":"Env","value":"prod"},{"key":"Name","value":"p001"},{"key":"Type","value":"master"}],
                     "Tenancy":"default",
                     "UserData":"",
                     "Volumes": []
@@ -544,9 +551,6 @@ def test_instance():
                 }
             },sort_keys=True)
     result = json.dumps(instance, cls=CfnJsonEncoder, sort_keys=True)
-    print "expect = ", expects
-    print ""
-    print "result = ", result
     assert result == expects
 
 def test_route_table():

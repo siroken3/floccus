@@ -349,7 +349,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def DisableApiTermination(self):
-        pass
+        return self._get_api_response('disableApiTermination')
 
     @property
     def EbsOptimized(self):
@@ -401,11 +401,11 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def SecurityGroupIds(self):
-        pass
+        return self._security_groups
 
     @property
     def SecurityGroups(self):
-        return self._security_groups
+        return []
 
     @property
     def SourceDestCheck(self):
@@ -425,11 +425,11 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def UserData(self):
-        pass
+        return self._get_api_response('userData')
 
     @property
     def Volumes(self):
-        pass
+        return []
 
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
     def __init__(self,
