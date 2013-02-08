@@ -11,6 +11,7 @@ CfnVpc(
          u'state': u'available',
          u'vpcId': u'vpc-aa7704c3'})
 ]
+
 internet_gateways = [CfnInternetGateway(
         {u'attachmentSet': [{u'state': u'available', u'vpcId': u'vpc-aa7704c3'}],
          u'internetGatewayId': u'igw-a17704c8',
@@ -21,6 +22,34 @@ security_groups = [CfnEC2SecurityGroup(
         {'groupDescription': 'External security group',
          'groupId': 'sg-28e8f444',
          'groupName': 'external-sg',
+         'ipPermissions': [{'fromPort': 22,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '123.123.123.123/32'},
+                                           {'cidrIp': '221.186.108.105/32'}],
+                             'toPort': 22},
+                            {'fromPort': 80,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '0.0.0.0/0'}],
+                             'toPort': 80},
+                            {'fromPort': 8443,
+                             'groups': [],
+                             'ipProtocol': 'tcp',
+                             'ipRanges': [{'cidrIp': '123.123.123.123/32'},
+                                           {'cidrIp': '221.186.108.105/32'}],
+                             'toPort': 8443}],
+         'ipPermissionsEgress': [{'groups': [],
+                                   'ipProtocol': '-1',
+                                   'ipRanges': [{'cidrIp': '0.0.0.0/0'}]}],
+         'ownerId': '478468994184',
+         'vpcId': 'vpc-aa7704c3'},
+        vpcs[0]
+        ),
+                   CfnEC2SecurityGroup(
+        {'groupDescription': 'External security group',
+         'groupId': 'sg-2ce8f440',
+         'groupName': 'common-sg',
          'ipPermissions': [{'fromPort': 22,
                              'groups': [],
                              'ipProtocol': 'tcp',
@@ -140,9 +169,9 @@ instance_profiles = [
     CfnIAMInstanceProfile(
         {u'Arn': u'arn:aws:iam::478468994184:instance-profile/LogServerRole',
          u'CreateDate': u'2012-11-19T12:38:03Z',
-         u'InstanceProfileId': u'AIPAJH73JAVIVURJU6RP6',
+         u'InstanceProfileId': u'123456789012345123456',
          u'InstanceProfileName': u'LogServerRole',
-         u'Path': u'/',
+         u'Path': u'/', 
          u'Roles': [{u'Arn': u'arn:aws:iam::478468994184:role/LogServerRole',
                      u'AssumeRolePolicyDocument': u'%7B%22Version%22%3A%222008-10-17%22%2C%22Statement%22%3A%5B%7B%22Sid%22%3A%22%22%2C%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22ec2.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D',
                      u'CreateDate': u'2012-11-19T12:38:03Z',
@@ -368,7 +397,7 @@ def test_iam_role():
     result = json.dumps(iam_roles[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
-def tset_iam_user():
+def _test_iam_user():
     expects = json.dumps({
             "": {
                 "Type":"AWS::IAM::User",
@@ -401,7 +430,7 @@ def test_networkinterface():
     assert result == expects
 
 
-def _test_instance():
+def test_instance():
     instance = CfnEC2Instance(
         {u'amiLaunchIndex': 0,
          u'architecture': u'x86_64',
@@ -477,42 +506,47 @@ def _test_instance():
         )
 
     expects = json.dumps({
-            "Type": "AWS::EC2::Instance",
-            "Properties" : {
-                "AvailabilityZone" : "ap-northeast-1",
-                "BlockDeviceMappings": [{
-                        "DeviceName": "/dev/sda",
-                        "Ebs":{
-                            "DeleteOnTermination" : True,
-                            },
-                        },{
-                        "DeviceName": "/dev/sdf",
-                        "Ebs":{
-                            "DeleteOnTermination" : True,
-                            },
-                        }],
-                "EBSOptimized": False,
-                "IamInstanceProfile": { "Ref": "AIPAJVKSNSPJ2FIPJE6JY" },
-                "ImageId": "ami-7855ec79",
-                "InstanceType": "m1.small",
-                "KernelId": "aki-40992841",
-                "KeyName": "katatema",
-                "Monitoring": False,
-                "NetworkInterfaces": [{"Ref":"eni4aa6d523"}],
-                "PlacementGroupName": "",
-                "PrivateIpAddress":"10.0.1.4",
-                "RamdiskId":"ramdisk",
-                "SecurityGroupIds": [{"Ref":"sg28e8f444"},{"Ref":"sg2ce8f440"}],
-                "SecurityGroups":[],
-                "SourceDestCheck": True,
-                "SubnetId":{ "Ref": "subnet6776050e"},
-                "Tags": [{"Key":"Env","Value":"prod"},{"Key":"Name","Value":"p001"},{"Key":"Type","Value":"master"}],
-                "Tenancy":"default",
-                "UserData":"",
-                "Volumes": []
+            "if26de9f1":{
+                "Type": "AWS::EC2::Instance",
+                "Properties" : {
+                    "AvailabilityZone" : "ap-northeast-1a",
+                    "BlockDeviceMappings": [{
+                            "DeviceName": "/dev/sda",
+                            "Ebs":{
+                                "DeleteOnTermination" : True,
+                                },
+                            },{
+                            "DeviceName": "/dev/sdf",
+                            "Ebs":{
+                                "DeleteOnTermination" : True,
+                                },
+                            }],
+                    "EBSOptimized": False,
+                    "IamInstanceProfile": { "Ref": "LogServerRole" },
+                    "ImageId": "ami-7855ec79",
+                    "InstanceType": "m1.small",
+                    "KernelId": "aki-40992841",
+                    "KeyName": "katatema",
+                    "Monitoring": False,
+                    "NetworkInterfaces": [{"Ref":"eni4aa6d523"}],
+                    "PlacementGroupName": "",
+                    "PrivateIpAddress":"10.0.1.4",
+                    "RamdiskId":"ramdisk",
+                    "SecurityGroupIds": [{"Ref":"sg28e8f444"},{"Ref":"sg2ce8f440"}],
+                    "SecurityGroups":[],
+                    "SourceDestCheck": True,
+                    "SubnetId":{ "Ref": "subnet6776050e"},
+                    "Tags": [{"Key":"Env","Value":"prod"},{"Key":"Name","Value":"p001"},{"Key":"Type","Value":"master"}],
+                    "Tenancy":"default",
+                    "UserData":"",
+                    "Volumes": []
+                    }
                 }
             },sort_keys=True)
     result = json.dumps(instance, cls=CfnJsonEncoder, sort_keys=True)
+    print "expect = ", expects
+    print ""
+    print "result = ", result
     assert result == expects
 
 def test_route_table():

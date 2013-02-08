@@ -29,7 +29,9 @@ class CfnAWSDataType(CfnAWSObject):
         entrykeys = [p for p in dir(self) if not p.startswith('_')]
         for entrykey in entrykeys:
             try:
-                properties[entrykey] = getattr(self, entrykey)
+                attr = getattr(self, entrykey)
+                if attr is not None:
+                    properties[entrykey] = attr
             except KeyError:
                 pass
         return properties
@@ -45,16 +47,6 @@ class CfnAWSResource(CfnAWSDataType):
 
     def _name(self):
         return utils.normalize_name(self._cfn_id())
-
-    def _resource_properties(self):
-        properties = {}
-        entrykeys = [p for p in dir(self) if not p.startswith('_')]
-        for entrykey in entrykeys:
-            try:
-                properties[entrykey] = getattr(self, entrykey)
-            except KeyError:
-                pass
-        return properties
 
     def _cfn_expr(self):
         return {
@@ -74,11 +66,6 @@ class CfnAWSResourceRef(CfnAWSObject):
 
     def _cfn_expr(self):
         return { 'Ref': self.cfn_resource._name() }
-
-
-class CfnTaggedResource(CfnAWSResource):
-    def __init__(self, api_response):
-        CfnAWSResource.__init__(self, vpc)
 
 
 class CfnVpc(CfnAWSResource):
@@ -279,16 +266,41 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
 class CfnEC2Instance(CfnAWSResource):
     class _CfnBlockDeviceMapping(CfnAWSDataType):
+        class _CfnBlockDeviceProperty(CfnAWSDataType):
+            def __init__(self, api_response):
+                CfnAWSDataType.__init__(self, api_response)
+
+            @property
+            def DeleteOnTermination(self):
+                return self._get_api_response('deleteOnTermination')
+
+            @property
+            def Iops(self):
+                pass
+
+            @property
+            def Size(self):
+                return None
+
+            @property
+            def SnapshotId(self):
+                return None
+
+            @property
+            def VolumnType(self):
+                return None
+
         def __init__(self, api_response):
             CfnAWSDataType.__init__(self, api_response)
+            self._ebs = self._CfnBlockDeviceProperty(api_response['ebs'])
 
         @property
         def DeviceName(self):
-            pass
+            return self._get_api_response('deviceName')
 
         @property
         def Ebs(self):
-            pass
+            return self._ebs
 
         @property
         def NoDevice(self):
@@ -297,6 +309,7 @@ class CfnEC2Instance(CfnAWSResource):
         @property
         def VirtualName(self):
             pass
+
 
     class _CfnMountPoint(CfnAWSDataType):
         def __init__(self, api_response):
@@ -321,17 +334,18 @@ class CfnEC2Instance(CfnAWSResource):
         self._network_interfaces = [CfnAWSResourceRef(eni) for eni in cfn_network_interfaces]
         self._security_groups = [CfnAWSResourceRef(sg) for sg in cfn_security_groups]
         self._subnet = CfnAWSResourceRef(cfn_subnet)
+        self._blockdeviceMappings = [self._CfnBlockDeviceMapping(bdm) for bdm in api_response['blockDeviceMapping']]
 
     def _cfn_id(self):
         return self._get_api_response('instanceId')
 
     @property
     def AvailabilityZone(self):
-        pass
+        return self._get_api_response('placement')['availabilityZone']
 
     @property
     def BlockDeviceMappings(self):
-        pass
+        return self._blockdeviceMappings
 
     @property
     def DisableApiTermination(self):
@@ -339,7 +353,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def EbsOptimized(self):
-        pass
+        return self._get_api_response('ebsOptimized')
 
     @property
     def IamInstanceProfile(self):
@@ -347,23 +361,27 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def ImageId(self):
-        pass
+        return self._get_api_response('imageId')
 
     @property
     def InstanceType(self):
-        pass
+        return self._get_api_response('instanceType')
 
     @property
     def KernelId(self):
-        pass
+        return self._get_api_response('kernelId')
 
     @property
     def KeyName(self):
-        pass
+        return self._get_api_response('keyName')
 
     @property
     def Monitoring(self):
-        pass
+        monitoring_state = self._get_api_response('monitoring')['state']
+        if monitoring_state == 'disabled':
+            return False
+        else:
+            return True
 
     @property
     def NetworkInterfaces(self):
@@ -371,15 +389,15 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def PlacementGroupName(self):
-        pass
+        return self._get_api_response('placement')['groupName']
 
     @property
     def PrivateIpAddress(self):
-        pass
+        return self._get_api_response('privateIpAddress')
 
     @property
     def RamdiskId(self):
-        pass
+        return self._get_api_response('ramdiskId')
 
     @property
     def SecurityGroupIds(self):
@@ -391,7 +409,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def SourceDestCheck(self):
-        pass
+        return self._get_api_response('sourceDestCheck')
 
     @property
     def SubnetId(self):
@@ -399,11 +417,11 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def Tags(self):
-        pass
+        return self._get_api_response('tagSet')
 
     @property
     def Tenancy(self):
-        pass
+        return self._get_api_response('placement')['tenancy']
 
     @property
     def UserData(self):
