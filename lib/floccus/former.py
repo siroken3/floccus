@@ -17,7 +17,7 @@ class Former(object):
         stack = {"Resources":{}}
         vpcs = self._form_vpc()
         for vpc in vpcs:
-            stack['Resources'].update(json.loads(json.dumps(vpc, cls=CfnJsonEncoder, sort_keys=True)))
+            stack['Resources'].update(vpc._cfn_expr())
             internet_gateways     = self._form_internet_gateway(vpc)
             subnets               = self._form_subnets(vpc)
             security_groups       = self._form_security_groups(vpc)
