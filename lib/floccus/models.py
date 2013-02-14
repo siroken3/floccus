@@ -2,6 +2,7 @@
 
 import urllib
 import json
+
 import utils
 
 class CfnJsonEncoder(json.JSONEncoder):
@@ -56,7 +57,6 @@ class CfnAWSResource(CfnAWSDataType):
                 }
             }
 
-
 class CfnAWSResourceRef(CfnAWSObject):
     def __init__(self, cfn_resource):
         self.cfn_resource = cfn_resource
@@ -82,7 +82,6 @@ class CfnVpc(CfnAWSResource):
     @property
     def InstanceTenancy(self):
         return self._get_api_response('instanceTenancy')
-
 
 class CfnInternetGateway(CfnAWSResource):
     def __init__(self, api_response):

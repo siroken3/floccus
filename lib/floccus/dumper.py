@@ -1,5 +1,6 @@
-import utils
 import json
 
+import floccus.utils
+
 def output(model):
-    pass
+    return model
