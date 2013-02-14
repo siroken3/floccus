@@ -40,8 +40,6 @@ def test_vpcattachment_internetgateway():
                 }
             }, sort_keys=True)
     result = json.dumps(testdata.igwattachments[0], cls=CfnJsonEncoder, sort_keys=True)
-    print "expects = " + expects
-    print "result  = " + result
     assert result == expects
 
 def test_subnet():
@@ -56,8 +54,6 @@ def test_subnet():
                 }
             }, sort_keys=True)
     result = json.dumps(testdata.subnets[0], cls=CfnJsonEncoder, sort_keys=True)
-    print result
-    print expects
     assert result == expects
 
 def test_security_group_rule_1():
@@ -137,7 +133,6 @@ def test_security_group():
     result = json.dumps(testdata.security_groups[0], cls=CfnJsonEncoder, sort_keys=True)
     assert result == expects
 
-
 def test_iam_group():
     expects = json.dumps({
             "as": {
@@ -175,8 +170,6 @@ def test_iam_group():
                 }
             }, sort_keys=True)
     result = json.dumps(testdata.iam_groups[0], cls=CfnJsonEncoder, sort_keys=True)
-    print 'result = ', result
-    print 'expects= ', expects
     assert result == expects
 
 def test_iam_instance_profile():
@@ -242,9 +235,6 @@ def test_networkinterface():
                 }
             }, sort_keys=True)
     result = json.dumps(testdata.network_interfaces[0], cls=CfnJsonEncoder, sort_keys=True)
-    print "expect = ", expects
-    print ""
-    print "result = ", result
     assert result == expects
 
 def test_instance():
