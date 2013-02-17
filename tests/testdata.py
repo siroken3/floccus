@@ -183,10 +183,8 @@ instance_profiles = [
 
 igwattachments = [
     CfnInternetGatewayAttachment(
-        {u'attachmentSet': [{u'state': u'available',
-                             u'vpcId': u'vpc-aa7704c3'}],
-         u'internetGatewayId': u'igw-a17704c8',
-         u'tagSet': []}, vpcs[0], internet_gateways)
+        {u'state': u'available', u'vpcId': u'vpc-aa7704c3'},
+        'igw-a17704c8')
     ]
 
 instances = [
