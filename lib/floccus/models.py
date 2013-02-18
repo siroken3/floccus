@@ -513,11 +513,12 @@ class CfnEC2Route(CfnAWSResource):
         return cfn_resourceref(self._route_table_id)
 
 
-
-
 class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
-    def __init__(self, api_response, cfn_security_groups):
+    def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::AutoScaling::LaunchConfiguration")
+
+    def _cfn_id(self):
+        return self._get_api_response('LaunchConfigurationName')
 
     @property
     def BlockDeviceMappings(self):
@@ -525,43 +526,43 @@ class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
 
     @property
     def IamInstanceProfile(self):
-        pass
+        return self._get_api_response('iamInstanceProfile')
 
     @property
     def ImageId(self):
-        pass
+        return self._get_api_response('imageId')
 
     @property
     def InstanceMonitoring(self):
-        pass
+        return self._get_api_response('InstanceMonitoring')['Enabled']
 
     @property
     def InstanceType(self):
-        pass
+        return self._get_api_response('InstanceType')
 
     @property
     def KernelId(self):
-        pass
+        return self._get_api_response('KernelId')
 
     @property
     def KeyName(self):
-        pass
+        return self._get_api_response('KeyName')
 
     @property
     def RamDiskId(self):
-        pass
+        return self._get_api_response('RamdiskId')
 
     @property
     def SecurityGroups(self):
-        pass
+        return [cfn_resourceref(sg) for sg in self._get_api_response('SecurityGroups')]
 
     @property
     def SpotPrice(self):
-        pass
+        return self._get_api_response('SpotPrice')
 
     @property
     def UserData(self):
-        pass
+        return self._get_api_response('UserData')
 
 
 class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
@@ -636,8 +637,6 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
     @property
     def VPCZoneIdentifier(self):
         return cfn_resourceref(self._get_api_response('VPCZoneIdentifier'))
-
-
 
 
 class CfnAutoScalingPolicy(CfnAWSResource):
@@ -717,6 +716,3 @@ class CfnIAMRole(CfnAWSResource):
     def Policies(self):
         return self._policies
 
-class CfnIAMUser(CfnAWSResource):
-    def __init__(self, api_response, cfn_iam_groups):
-        CfnAWSResource.__init__(self, api_response, "AWS::IAM::User")

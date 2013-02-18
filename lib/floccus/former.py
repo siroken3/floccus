@@ -25,7 +25,7 @@ class Former(object):
         self._form_route_tables(stack)
         self._form_network_interface(stack)
         self._form_auto_scaling_group(stack)
-#        self._form_auto_scaling_launch_configuration(stack)
+        self._form_auto_scaling_launch_configuration(stack)
 #        policies              = self._form_auto_scaling_policy(stack)
 #        topics                = self._form_sns_topics(stack)
 #        db_instances          = self._form_db_instance(stack)
@@ -141,6 +141,12 @@ class Former(object):
 
     def _form_auto_scaling_launch_configuration(self, stack):
         configurations = []
+        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        op = self.autoscaling.get_operation('DescribeLaunchConfigurations')
+        code, data = op.call(ep)
+        launch_configs = []
+        for launch_config_data in data['LaunchConfigurations']:
+            configurations.append(CfnAutoScalingLaunchConfiguration(launch_config_data))
         self._add_resources(stack, configurations)
 
     def _form_auto_scaling_policy(self, stack):
