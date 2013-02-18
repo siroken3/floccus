@@ -226,10 +226,10 @@ def test_networkinterface():
                 "Type": "AWS::EC2::NetworkInterface",
                 "Properties":{
                     "Description": "ELB keshin-stg",
-                    "GroupSet": [ {"Ref":"sg28e8f444"}, {"Ref":"sg2ce8f440"} ],
+                    "GroupSet": [ {"Ref":"sg28e8f444"} ],
                     "PrivateIpAddress": "10.0.0.31",
                     "SourceDestCheck": True,
-                    "SubnetId": {"Ref":"subnetaa7704c3"},
+                    "SubnetId": {"Ref":"subneta77704ce"},
                     "Tags": []
                     }
                 }
@@ -278,6 +278,8 @@ def test_instance():
                 }
             },sort_keys=True)
     result = json.dumps(testdata.instances[0], cls=CfnJsonEncoder, sort_keys=True)
+    print "expects = ", expects
+    print "results = ", result
     assert result == expects
 
 def test_route_table():

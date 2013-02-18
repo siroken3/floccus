@@ -207,9 +207,8 @@ class CfnEC2RouteTable(CfnAWSResource):
         return self._get_api_response('tagSet')
 
 class CfnIAMInstanceProfile(CfnAWSResource):
-    def __init__(self, api_response, cfn_iam_roles):
+    def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
-        self._roles = [CfnAWSResourceRef(role) for role in cfn_iam_roles]
 
     def _cfn_id(self):
         return self._get_api_response('InstanceProfileName')
@@ -220,7 +219,7 @@ class CfnIAMInstanceProfile(CfnAWSResource):
 
     @property
     def Roles(self):
-        return self._roles
+        return []
 
 class CfnEC2NetworkInterface(CfnAWSResource):
     def __init__(self, api_response):

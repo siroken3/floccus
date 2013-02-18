@@ -43,8 +43,7 @@ security_groups = [CfnEC2SecurityGroup(
                                    'ipProtocol': '-1',
                                    'ipRanges': [{'cidrIp': '0.0.0.0/0'}]}],
          'ownerId': '478468994184',
-         'vpcId': 'vpc-aa7704c3'},
-        vpcs[0]
+         'vpcId': 'vpc-aa7704c3'}
         ),
                    CfnEC2SecurityGroup(
         {'groupDescription': 'External security group',
@@ -71,8 +70,7 @@ security_groups = [CfnEC2SecurityGroup(
                                    'ipProtocol': '-1',
                                    'ipRanges': [{'cidrIp': '0.0.0.0/0'}]}],
          'ownerId': '478468994184',
-         'vpcId': 'vpc-aa7704c3'},
-        vpcs[0]
+         'vpcId': 'vpc-aa7704c3'}
         )]
 
 subnets = [
@@ -82,8 +80,7 @@ subnets = [
          u'cidrBlock': u'10.0.1.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-78760511',
-         u'vpcId': u'vpc-aa7704c3'},
-        vpcs[0]
+         u'vpcId': u'vpc-aa7704c3'}
         ),
     CfnEC2Subnet(
         {u'availabilityZone': u'ap-northeast-1a',
@@ -91,8 +88,7 @@ subnets = [
          u'cidrBlock': u'10.0.2.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-aa7704c3',
-         u'vpcId': u'vpc-aa7704c3'},
-        vpcs[0]
+         u'vpcId': u'vpc-aa7704c3'}
         ),
     CfnEC2Subnet(
         {u'availabilityZone': u'ap-northeast-1a',
@@ -100,8 +96,7 @@ subnets = [
          u'cidrBlock': u'10.0.3.0/24',
          u'state': u'available',
          u'subnetId': u'subnet-6776050e',
-         u'vpcId': u'vpc-aa7704c3'},
-        vpcs[0]
+         u'vpcId': u'vpc-aa7704c3'}
         )]
 
 network_interfaces = [CfnEC2NetworkInterface(
@@ -131,7 +126,7 @@ network_interfaces = [CfnEC2NetworkInterface(
          u'subnetId': u'subnet-a77704ce',
          u'tagSet': [],
          u'vpcId': u'vpc-aa7704c3'}
-,security_groups, subnets[1])]
+        )]
 
 iam_groups = [
     CfnIAMGroup(
@@ -162,9 +157,6 @@ iam_roles = [CfnIAMRole(
          u'RoleName': u'LogServerRole'})
 ]
 
-iam_users = [CfnIAMUser({}, iam_groups)
-]
-
 instance_profiles = [
     CfnIAMInstanceProfile(
         {u'Arn': u'arn:aws:iam::478468994184:instance-profile/LogServerRole',
@@ -178,7 +170,7 @@ instance_profiles = [
                      u'Path': u'/',
                      u'RoleId': u'AROAJ25JKW56LCC73JH74',
                      u'RoleName': u'LogServerRole'}
-                    ]}, iam_roles)
+                    ]})
     ]
 
 igwattachments = [
@@ -258,15 +250,11 @@ instances = [
          u'vpcId': u'vpc-aa7704c3',
          u'userData': u'',
          u'disableApiTermination':False,
-         u'EbsOptimized': False},
-        instance_profiles[0],
-        network_interfaces,
-        security_groups,
-        subnets[2]
+         u'EbsOptimized': False}
         )
 ]
 
-route_tables = [CfnRouteTable(
+route_tables = [CfnEC2RouteTable(
         {u'associationSet': [{u'main': True,
                               u'routeTableAssociationId': u'rtbassoc-af7704c6',
                               u'routeTableId': u'rtb-ac7704c5'}],
@@ -293,6 +281,6 @@ route_tables = [CfnRouteTable(
                         u'state': u'active'}],
          u'routeTableId': u'rtb-ac7704c5',
          u'tagSet': [{u'Key':u'Role', u'Value':u'Test Instance'}],
-         u'vpcId': u'vpc-aa7704c3'},
-        vpcs[0])
-]
+         u'vpcId': u'vpc-aa7704c3'}
+        )
+                ]
