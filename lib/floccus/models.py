@@ -223,13 +223,8 @@ class CfnIAMInstanceProfile(CfnAWSResource):
         return self._roles
 
 class CfnEC2NetworkInterface(CfnAWSResource):
-    def __init__(self,
-                 api_response,
-                 cfn_security_groups,
-                 cfn_subnet):
+    def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::NetworkInterface")
-        self._security_groups = [CfnAWSResourceRef(sg) for sg in cfn_security_groups]
-        self._subnet = CfnAWSResourceRef(cfn_subnet)
 
     def _cfn_id(self):
         return self._get_api_response('networkInterfaceId')
@@ -240,7 +235,8 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def GroupSet(self):
-        return self._security_groups
+        security_groups = self._get_api_response('groupSet')
+        return [cfn_resourceref(sg['groupId']) for sg in security_groups]
 
     @property
     def PrivateIpAddress(self):
@@ -252,7 +248,7 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def SubnetId(self):
-        return self._subnet
+        return cfn_resourceref(self._get_api_response('subnetId'))
 
     @property
     def Tags(self):
@@ -419,7 +415,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def Volumes(self):
-        return []
+        pass
 
 class CfnEC2Volume(CfnAWSResource):
     def __init__(self, api_response):
@@ -473,54 +469,50 @@ class CfnEC2VolumeAttachment(CfnAWSResource):
         return cfn_resourceref(self._volume_id)
 
 class CfnSubnetRouteTableAssociation(CfnAWSResource):
-    def __init__(self,
-                 api_response,
-                 cfn_route_table,
-                 cfn_subnet):
+    def __init__(self, api_response, route_table_id):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::SubnetRouteTableAssociation")
-        self._route_table = CfnAWSResourceRef(cfn_route_table)
-        self._subnet = CfnAWSResourceRef(cfn_subnet)
+        self._route_table_id = route_table_id
+
+    def _cfn_id(self):
+        return self._get_api_response('routeTableAssociationId')
 
     @property
     def RouteTableId(self):
-        return self._route_table
+        return cfn_resourceref(self._route_table_id)
 
     @property
     def SubnetId(self):
-        return self._subnet
+        return cfn_resourceref(self._get_api_response('subnetId'))
 
-class CfnRoute(CfnAWSResource):
-    def __init__(self,
-                 api_response,
-                 cfn_route_table,
-                 cfn_gateway=None,
-                 cfn_instance=None,
-                 cfn_network_interface=None):
+class CfnEC2Route(CfnAWSResource):
+    def __init__(self, api_response, route_table_id):
         CfnAWSResource.__init__(self, api_response, "AWS::EC2::Route")
-        self._gateway = CfnAWSResourceRef(cfn_gateway)
-        self._instance = CfnAWSResourceRef(cfn_instance)
-        self._network_interface = CfnAWSResourceRef(cfn_network_interface)
-        self._route_table = CfnAWSResourceRef(cfn_route_table)
+        self._route_table_id = route_table_id
+
+    def _cfn_id(self):
+        return self._route_table_id + self._get_api_response('destinationCidrBlock')
 
     @property
     def DestinationCidrBlock(self):
-        pass
+        return self._get_api_response('destinationCidrBlock')
 
     @property
     def GatewayId(self):
-        return self._gateway
+        return cfn_resourceref(self._get_api_response('gatewayId'))
 
     @property
     def InstanceId(self):
-        return self._instance
+        return cfn_resourceref(self._get_api_response('instanceId'))
 
     @property
     def NetworkInterfaceId(self):
-        return self._network_interface
+        return cfn_resourceref(self._get_api_response('networkInterfaceId'))
 
     @property
     def RouteTableId(self):
-        return self._route_table
+        return cfn_resourceref(self._route_table_id)
+
+
 
 
 class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
@@ -572,14 +564,80 @@ class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
         pass
 
 
-class CfnAutoScalingGroup(CfnAWSResource):
-    def __init__(self, api_response, cfn_launch_configuration, cfn_subnets):
+class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
+    class _CfnAutoScalingNotificationConfigurationPropertyType(CfnAWSDataType):
+        def __init__(self, api_response):
+            CfnAWSDataType.__init__(self, api_response)
+
+        @property
+        def TopicARN(self):
+            return self._get_api_response('TopicARN')
+
+        @property
+        def NotificationTypes(self):
+            return self._get_api_response('NotificationType')
+
+    def __init__(self, api_response, notification_configurations):
         CfnAWSResource.__init__(self, api_response, "AWS::AutoScaling::AutoScalingGroup")
+        ncs = [nc for nc in notification_configurations if nc['AutoScalingGroupName'] == api_response['AutoScalingGroupName']]
+        # TopicARN must be unique
+        if len(ncs) >= 1:
+            self._notification_configuration = self._CfnAutoScalingNotificationConfigurationPropertyType(utils.groupby(ncs, "TopicARN", "NotificationType")[0])._cfn_expr()
+        else:
+            self._notification_configuration = []
+
+    def _cfn_id(self):
+        return self._get_api_response('AutoScalingGroupName')
+
+    @property
+    def AvailabilityZones(self):
+        return self._get_api_response('AvailabilityZones')
+
+    @property
+    def Cooldown(self):
+        return self._get_api_response('DefaultCooldown')
+
+    @property
+    def DesiredCapacity(self):
+        return self._get_api_response('DesiredCapacity')
+
+    @property
+    def HealthCheckGracePeriod(self):
+        return self._get_api_response('HealthCheckGracePeriod')
+
+    @property
+    def HealthCheckType(self):
+        return self._get_api_response('HealthCheckType')
+
+    @property
+    def LaunchConfigurationName(self):
+        return self._get_api_response('LaunchConfigurationName')
+
+    @property
+    def LoadBalancerNames(self):
+        return self._get_api_response('LoadBalancerNames')
+
+    @property
+    def MaxSize(self):
+        return self._get_api_response('MaxSize')
+
+    @property
+    def MinSize(self):
+        return self._get_api_response('MinSize')
+
+    @property
+    def NotificationConfiguration(self):
+        return self._notification_configuration
+
+    @property
+    def Tags(self):
+        return self._get_api_response('Tags')
+
+    @property
+    def VPCZoneIdentifier(self):
+        return cfn_resourceref(self._get_api_response('VPCZoneIdentifier'))
 
 
-class CfnAutoScalingNotificationConfigurationPropertyType(CfnAWSDataType):
-    def __init__(self, api_response):
-        CfnAWSDataType.__init__(self, api_response)
 
 
 class CfnAutoScalingPolicy(CfnAWSResource):

@@ -12,21 +12,20 @@ class Former(object):
     def __init__(self):
         self.session = botocore.session.get_session()
         self.ec2service = self.session.get_service('ec2')
+        self.autoscaling = self.session.get_service('autoscaling')
 
     def form(self):
         stack = {"Resources":{}}
-        vpcs = self._form_vpc(stack)
-        igws, gw_attachments  = self._form_internet_gateway(stack)
-        subnets               = self._form_subnets(stack)
-        security_groups       = self._form_security_groups(stack)
-        instances             = self._form_instances(stack)
-        volumes, volume_attachments = self._form_volume(stack)
-        route_tables          = self._form_route_tables(stack)
-#            launch_configurations = self._form_auto_scaling_launch_configuration(stack, security_groups)
-#            self._form_subnet_route_table_association(stack, route_tables, subnets)
-#            self._form_route(stack, route_tables, igws, instances)
-#            self._form_auto_scaling_group(stack, launch_configurations, subnets)
-
+        self._form_vpc(stack)
+        self._form_internet_gateway(stack)
+        self._form_subnets(stack)
+        self._form_security_groups(stack)
+        self._form_instances(stack)
+        self._form_volume(stack)
+        self._form_route_tables(stack)
+        self._form_network_interface(stack)
+        self._form_auto_scaling_group(stack)
+#        self._form_auto_scaling_launch_configuration(stack)
 #        policies              = self._form_auto_scaling_policy(stack)
 #        topics                = self._form_sns_topics(stack)
 #        db_instances          = self._form_db_instance(stack)
@@ -54,7 +53,6 @@ class Former(object):
                 cfn_gateway_attachments.append(CfnInternetGatewayAttachment(attachment, gateway_id))
         self._add_resources(stack, cfn_internet_gateways)
         self._add_resources(stack, cfn_gateway_attachments)
-        return (cfn_internet_gateways, cfn_gateway_attachments)
 
     def _form_subnets(self, stack):
         subnets = []
@@ -65,29 +63,46 @@ class Former(object):
             cfn_subnet = CfnEC2Subnet(subnet_data)
             subnets.append(cfn_subnet)
         self._add_resources(stack, subnets)
-        return subnets
 
     def _form_security_groups(self, stack):
         security_groups = []
         ep = self.ec2service.get_endpoint('ap-northeast-1')
         op = self.ec2service.get_operation('DescribeSecurityGroups')
         code, data = op.call(ep)
-        for security_groupData in data['securityGroupInfo']:
-            cfn_security_group = CfnEC2SecurityGroup(security_groupData)
+        for security_group_data in data['securityGroupInfo']:
+            cfn_security_group = CfnEC2SecurityGroup(security_group_data)
             security_groups.append(cfn_security_group)
         self._add_resources(stack, security_groups)
-        return security_groups
 
     def _form_route_tables(self, stack):
         route_tables = []
+        subnet_route_table_association = []
+        routes = []
         ep = self.ec2service.get_endpoint('ap-northeast-1')
         op = self.ec2service.get_operation('DescribeRouteTables')
         code, data = op.call(ep)
         for route_table_data in data['routeTableSet']:
             cfn_route_table = CfnEC2RouteTable(route_table_data)
             route_tables.append(cfn_route_table)
+            route_table_id = route_table_data['routeTableId']
+            for route_data in route_table_data['routeSet']:
+                cfn_route = CfnEC2Route(route_data, route_table_id)
+                routes.append(cfn_route)
+            for association_data in route_table_data['associationSet']:
+                cfn_route_table_association = CfnSubnetRouteTableAssociation(association_data, route_table_id)
+                subnet_route_table_association.append(cfn_route_table_association)
         self._add_resources(stack, route_tables)
-        return route_tables
+        self._add_resources(stack, routes)
+        self._add_resources(stack, subnet_route_table_association)
+
+    def _form_network_interface(self, stack):
+        network_interfaces = []
+        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        op = self.ec2service.get_operation('DescribeNetworkInterfaces')
+        code, data = op.call(ep)
+        for network_interface_data in data['networkInterfaceSet']:
+            network_interfaces.append(CfnEC2NetworkInterface(network_interface_data))
+        self._add_resources(stack, network_interfaces)
 
     def _form_instances(self, stack):
         ep = self.ec2service.get_endpoint('ap-northeast-1')
@@ -98,7 +113,6 @@ class Former(object):
             for instance_data in reservation['instancesSet']:
                 instances.append(CfnEC2Instance(instance_data))
         self._add_resources(stack, instances)
-        return instances
 
     def _form_volume(self, stack):
         ep = self.ec2service.get_endpoint('ap-northeast-1')
@@ -111,43 +125,35 @@ class Former(object):
             volume_id = volume_data['volumeId']
             for attachment_data in volume_data['attachmentSet']:
                 volume_attachments.append(CfnEC2VolumeAttachment(attachment_data, volume_id))
-
         self._add_resources(stack, volumes)
         self._add_resources(stack, volume_attachments)
-        return (volumes, volume_attachments)
 
-    def _form_route(self, stack, route_tables=[], internet_gateways=[], instances=[], network_interfaces=[]):
-        routes             = []
-        self._add_resources(stack, routes)
-        return routes
+    def _form_auto_scaling_group(self, stack):
+        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        op = self.autoscaling.get_operation('DescribeAutoScalingGroups')
+        code, group_data = op.call(ep)
+        op = self.autoscaling.get_operation('DescribeNotificationConfigurations')
+        code, config_data = op.call(ep)
+        groups = []
+        for g_data in group_data['AutoScalingGroups']:
+            groups.append(CfnAutoScalingAutoScalingGroup(g_data, config_data['NotificationConfigurations']))
+        self._add_resources(stack, groups)
 
-    def _form_subnet_route_table_association(self, stack, route_tables, subnets):
-        associations = []
-        self._add_resources(stack, associations)
-        return associations
-
-    def _form_auto_scaling_launch_configuration(self, stack, cfn_security_groups):
+    def _form_auto_scaling_launch_configuration(self, stack):
         configurations = []
         self._add_resources(stack, configurations)
-        return configurations
-
-    def _form_auto_scaling_group(self, stack, launch_configurations, subnets):
-        groups = []
-        self._add_resources(stack, groups)
-        return groups
 
     def _form_auto_scaling_policy(self, stack):
         auto_scaling_policies = []
         self._add_resources(stack, auto_scaling_policies)
-        return auto_scaling_policies
 
     def _form_sns_topics(self, stack):
         topics = []
-        return topics
+        self._add_resources(stack, topics)
 
     def _form_db_instance(self, stack):
         db_instances = []
-        return db_instances
+        self._add_resources(stack, db_instances)
 
     def _add_resources(self, stack, resources):
         for resource in resources:
