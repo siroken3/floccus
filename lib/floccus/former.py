@@ -13,6 +13,7 @@ class Former(object):
         self.session = botocore.session.get_session()
         self.ec2service = self.session.get_service('ec2')
         self.autoscaling = self.session.get_service('autoscaling')
+        self.sns = self.session.get_service('sns')
 
     def form(self):
         stack = {"Resources":{}}
@@ -26,8 +27,8 @@ class Former(object):
         self._form_network_interface(stack)
         self._form_auto_scaling_group(stack)
         self._form_auto_scaling_launch_configuration(stack)
-#        policies              = self._form_auto_scaling_policy(stack)
-#        topics                = self._form_sns_topics(stack)
+        self._form_auto_scaling_policy(stack)
+        self._form_sns_topics(stack)
 #        db_instances          = self._form_db_instance(stack)
         return stack
 
@@ -75,12 +76,12 @@ class Former(object):
         self._add_resources(stack, security_groups)
 
     def _form_route_tables(self, stack):
-        route_tables = []
-        subnet_route_table_association = []
-        routes = []
         ep = self.ec2service.get_endpoint('ap-northeast-1')
         op = self.ec2service.get_operation('DescribeRouteTables')
         code, data = op.call(ep)
+        route_tables = []
+        subnet_route_table_association = []
+        routes = []
         for route_table_data in data['routeTableSet']:
             cfn_route_table = CfnEC2RouteTable(route_table_data)
             route_tables.append(cfn_route_table)
@@ -150,11 +151,32 @@ class Former(object):
         self._add_resources(stack, configurations)
 
     def _form_auto_scaling_policy(self, stack):
+        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        op = self.autoscaling.get_operation('DescribePolicies')
+        code, data = op.call(ep)
         auto_scaling_policies = []
+        for policy_data in data['ScalingPolicies']:
+            auto_scaling_policies.append(CfnAutoScalingPolicy(policy_data))
         self._add_resources(stack, auto_scaling_policies)
 
     def _form_sns_topics(self, stack):
+        ep = self.sns.get_endpoint('ap-northeast-1')
+        op = self.sns.get_operation('ListTopics')
+        code, topic_data = op.call(ep)
+        op = self.sns.get_operation('ListSubscriptions')
+        code, subscription_data = op.call(ep)
         topics = []
+        for td in topic_data['Topics']:
+            topic_arn = td['TopicArn']
+            op = self.sns.get_operation('GetTopicAttributes')
+            code, t_attr = op.call(ep, topic_arn=topic_arn)
+            topic_attr_data = t_attr['Attributes']
+            api_response = {
+                "TopicArn": topic_arn,
+                "DisplayName": topic_attr_data['DisplayName'] if 'DisplayName' in topic_attr_data else "",
+                "Subscriptions": [sb for sb in subscription_data['Subscriptions'] if sb['TopicArn'] == topic_arn]
+            }
+            topics.append(CfnSNSTopic(api_response))
         self._add_resources(stack, topics)
 
     def _form_db_instance(self, stack):

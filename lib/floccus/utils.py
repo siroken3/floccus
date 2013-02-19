@@ -6,7 +6,7 @@ import string
 import re
 
 def normalize_name(name):
-    return re.sub(r'[/\-\._]','', name)
+    return re.sub(r'[/\-\._:]','', name)
 
 def flatten(orgdict, column):
     import copy
