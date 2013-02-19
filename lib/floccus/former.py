@@ -30,7 +30,8 @@ class Former(object):
         self._form_auto_scaling_launch_configuration(stack)
         self._form_auto_scaling_policy(stack)
         self._form_sns(stack)
-        self._form_iam(stack)
+        self._form_iam_role_policy(stack)
+        self._form_iam_instance_profile(stack)
 #        db_instances          = self._form_db_instance(stack)
         return stack
 
@@ -181,7 +182,7 @@ class Former(object):
             topics.append(CfnSNSTopic(api_response))
         self._add_resources(stack, topics)
 
-    def _form_iam(self, stack):
+    def _form_iam_role_policy(self, stack):
         ep = self.iam.get_endpoint('us-east-1')
         op = self.iam.get_operation('ListRoles')
         code, data = op.call(ep)
@@ -207,6 +208,10 @@ class Former(object):
 
         self._add_resources(stack, roles)
         self._add_resources(stack, policies)
+
+    def _form_iam_instance_profile(self, stack):
+        instance_profiles = []
+        self._add_resources(stack, instance_profiles)
 
     def _form_db_instance(self, stack):
         db_instances = []
