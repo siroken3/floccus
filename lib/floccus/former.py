@@ -14,6 +14,7 @@ class Former(object):
         self.ec2service = self.session.get_service('ec2')
         self.autoscaling = self.session.get_service('autoscaling')
         self.sns = self.session.get_service('sns')
+        self.iam = self.session.get_service('iam')
 
     def form(self):
         stack = {"Resources":{}}
@@ -28,7 +29,8 @@ class Former(object):
         self._form_auto_scaling_group(stack)
         self._form_auto_scaling_launch_configuration(stack)
         self._form_auto_scaling_policy(stack)
-        self._form_sns_topics(stack)
+        self._form_sns(stack)
+        self._form_iam(stack)
 #        db_instances          = self._form_db_instance(stack)
         return stack
 
@@ -159,7 +161,7 @@ class Former(object):
             auto_scaling_policies.append(CfnAutoScalingPolicy(policy_data))
         self._add_resources(stack, auto_scaling_policies)
 
-    def _form_sns_topics(self, stack):
+    def _form_sns(self, stack):
         ep = self.sns.get_endpoint('ap-northeast-1')
         op = self.sns.get_operation('ListTopics')
         code, topic_data = op.call(ep)
@@ -178,6 +180,33 @@ class Former(object):
             }
             topics.append(CfnSNSTopic(api_response))
         self._add_resources(stack, topics)
+
+    def _form_iam(self, stack):
+        ep = self.iam.get_endpoint('us-east-1')
+        op = self.iam.get_operation('ListRoles')
+        code, data = op.call(ep)
+        roles = []
+        policies = []
+        role_policy_data_buf = {}
+        for role_data in data['Roles']:
+            roles.append(CfnIAMRole(role_data))
+            role_name = role_data['RoleName']
+            op = self.iam.get_operation('ListRolePolicies')
+            code, policy_name_data = op.call(ep, role_name=role_name)
+            for policy_name in policy_name_data['PolicyNames']:
+                if policy_name not in role_policy_data_buf:
+                    role_policy_data_buf[policy_name] = []
+                role_policy_data_buf[policy_name].append(role_name)
+
+        for policy_name, role_names in role_policy_data_buf.items():
+            op = self.iam.get_operation('GetRolePolicy')
+            for role_name in role_names:
+                code, role_policy = op.call(ep, role_name=role_name, policy_name=policy_name)
+                role_policy['Roles'] = role_names
+                policies.append(CfnIAMPolicy(role_policy))
+
+        self._add_resources(stack, roles)
+        self._add_resources(stack, policies)
 
     def _form_db_instance(self, stack):
         db_instances = []

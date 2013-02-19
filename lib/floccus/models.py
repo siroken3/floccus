@@ -206,20 +206,6 @@ class CfnEC2RouteTable(CfnAWSResource):
     def Tags(self):
         return self._get_api_response('tagSet')
 
-class CfnIAMInstanceProfile(CfnAWSResource):
-    def __init__(self, api_response):
-        CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
-
-    def _cfn_id(self):
-        return self._get_api_response('InstanceProfileName')
-
-    @property
-    def Path(self):
-        return self._get_api_response('Path')
-
-    @property
-    def Roles(self):
-        return []
 
 class CfnEC2NetworkInterface(CfnAWSResource):
     def __init__(self, api_response):
@@ -694,42 +680,26 @@ class CfnRDSDBInstance(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::RDS::DBInstance")
 
-class CfnIAMGroup(CfnAWSResource):
-    class _GetGroupPolicyResult(CfnAWSDataType):
-        def __init__(self, api_response):
-            CfnAWSDataType.__init__(self, api_response)
 
-#        def GroupName(self):
-#            return self._get_api_response('GroupName')
-
-        @property
-        def PolicyDocument(self):
-            documentstr = urllib.unquote(self._get_api_response('PolicyDocument'))
-            return json.loads(documentstr)
-
-        @property
-        def PolicyName(self):
-            return self._get_api_response('PolicyName')
-
+class CfnIAMInstanceProfile(CfnAWSResource):
     def __init__(self, api_response):
-        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Group")
-        self._policies = [self._GetGroupPolicyResult(policy) for policy in self._get_api_response('Policies')]
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
 
     def _cfn_id(self):
-        return self._get_api_response('Group')['GroupName']
+        return self._get_api_response('InstanceProfileName')
 
     @property
     def Path(self):
-        return self._get_api_response('Group')['Path']
+        return self._get_api_response('Path')
 
     @property
-    def Policies(self):
-        return self._policies
+    def Roles(self):
+        return []
+
 
 class CfnIAMRole(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::Role")
-        self._policies = []
 
     def _cfn_id(self):
         return self._get_api_response('RoleName')
@@ -745,5 +715,32 @@ class CfnIAMRole(CfnAWSResource):
 
     @property
     def Policies(self):
-        return self._policies
+        pass # A policies are always defined externally.
 
+class CfnIAMPolicy(CfnAWSResource):
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::Policy")
+
+    def _cfn_id(self):
+        return self._get_api_response('PolicyName')
+
+    @property
+    def Groups(self):
+        pass # It does not implement here yet.
+
+    @property
+    def PolicyDocument(self):
+        documentstr = urllib.unquote(self._get_api_response('PolicyDocument'))
+        return json.loads(documentstr)
+
+    @property
+    def PolicyName(self):
+        return self._get_api_response('PolicyName')
+
+    @property
+    def Roles(self):
+        return [cfn_resourceref(r) for r in self._get_api_response('Roles')]
+
+    @property
+    def Users(self):
+        pass # It does not implement here yet.
