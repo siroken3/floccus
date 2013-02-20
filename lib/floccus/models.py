@@ -5,6 +5,9 @@ import json
 
 import floccus.utils as utils
 
+def cfn_resourceref(ref_id):
+    return { 'Ref': utils.normalize_name(str(ref_id)) }
+
 class CfnJsonEncoder(json.JSONEncoder):
     def default(self, o):
         print o
@@ -14,7 +17,7 @@ class CfnJsonEncoder(json.JSONEncoder):
 
 class CfnAWSObject(object):
     def _cfn_expr(self):
-        pass
+        raise TypeError
 
 class CfnAWSDataType(CfnAWSObject):
     def __init__(self, api_response):
@@ -57,10 +60,6 @@ class CfnAWSResource(CfnAWSDataType):
                 "Properties": self._resource_properties()
                 }
             }
-
-def cfn_resourceref(ref_id):
-    return { 'Ref': utils.normalize_name(str(ref_id)) }
-
 
 class CfnVpc(CfnAWSResource):
     def __init__(self, api_response):
@@ -229,7 +228,7 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def SourceDestCheck(self):
-        return self._get_api_response('sourceDestCheck')
+        return str(self._get_api_response('sourceDestCheck'))
 
     @property
     def SubnetId(self):
@@ -247,7 +246,7 @@ class CfnEC2Instance(CfnAWSResource):
 
             @property
             def DeleteOnTermination(self):
-                return self._get_api_response('deleteOnTermination')
+                return str(self._get_api_response('deleteOnTermination'))
 
             @property
             def Iops(self):
@@ -320,7 +319,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def EbsOptimized(self):
-        return self._get_api_response('ebsOptimized')
+        return str(self._get_api_response('ebsOptimized'))
 
     @property
     def IamInstanceProfile(self):
@@ -346,9 +345,9 @@ class CfnEC2Instance(CfnAWSResource):
     def Monitoring(self):
         monitoring_state = self._get_api_response('monitoring')['state']
         if monitoring_state == 'disabled':
-            return False
+            return "False"
         else:
-            return True
+            return "True"
 
     @property
     def NetworkInterfaces(self):
@@ -581,15 +580,15 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
 
     @property
     def Cooldown(self):
-        return self._get_api_response('DefaultCooldown')
+        return str(self._get_api_response('DefaultCooldown'))
 
     @property
     def DesiredCapacity(self):
-        return self._get_api_response('DesiredCapacity')
+        return str(self._get_api_response('DesiredCapacity'))
 
     @property
     def HealthCheckGracePeriod(self):
-        return self._get_api_response('HealthCheckGracePeriod')
+        return str(self._get_api_response('HealthCheckGracePeriod'))
 
     @property
     def HealthCheckType(self):
@@ -605,11 +604,11 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
 
     @property
     def MaxSize(self):
-        return self._get_api_response('MaxSize')
+        return str(self._get_api_response('MaxSize'))
 
     @property
     def MinSize(self):
-        return self._get_api_response('MinSize')
+        return str(self._get_api_response('MinSize'))
 
     @property
     def NotificationConfiguration(self):
@@ -681,22 +680,6 @@ class CfnRDSDBInstance(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response, "AWS::RDS::DBInstance")
 
 
-class CfnIAMInstanceProfile(CfnAWSResource):
-    def __init__(self, api_response):
-        CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
-
-    def _cfn_id(self):
-        return self._get_api_response('InstanceProfileName')
-
-    @property
-    def Path(self):
-        return self._get_api_response('Path')
-
-    @property
-    def Roles(self):
-        return []
-
-
 class CfnIAMRole(CfnAWSResource):
     def __init__(self, api_response):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::Role")
@@ -744,3 +727,20 @@ class CfnIAMPolicy(CfnAWSResource):
     @property
     def Users(self):
         pass # It does not implement here yet.
+
+class CfnIAMInstanceProfile(CfnAWSResource):
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, "AWS::IAM::InstanceProfile")
+
+    def _cfn_id(self):
+        return self._get_api_response('InstanceProfileId')
+
+    @property
+    def Path(self):
+        return self._get_api_response('Path')
+
+    @property
+    def Roles(self):
+        return [cfn_resourceref(r['RoleName']) for r in self._get_api_response('Roles')]
+
+
