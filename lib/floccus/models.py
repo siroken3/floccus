@@ -86,8 +86,23 @@ class CfnInternetGateway(CfnAWSResource):
     @property
     def Tags(self):
 #        return self._get_api_response('tagSet')
-        pass # This is not operate, when the produced json file was used.
+#        When the produced json file was used, this does not worked.
+        pass
 
+class CfnEC2EIP(CfnAWSResource):
+    def __init__(self, api_response):
+        CfnAWSResource.__init__(self, api_response, "AWS::EC2::EIP")
+
+    def _cfn_id(self):
+        return self._get_api_response('publicIp')
+
+    @property
+    def InstanceId(self):
+        return cfn_resourceref(self._get_api_response('instanceId'))
+
+    @property
+    def Domain(self):
+        return self._get_api_response('domain')
 
 class CfnInternetGatewayAttachment(CfnAWSResource):
     def __init__(self, api_response, gateway_id):
@@ -106,7 +121,6 @@ class CfnInternetGatewayAttachment(CfnAWSResource):
     @property
     def VpcId(self):
         return self._vpc
-
 
 class CfnEC2Subnet(CfnAWSResource):
     def __init__(self, api_response):
@@ -262,7 +276,7 @@ class CfnEC2Instance(CfnAWSResource):
                 return None
 
             @property
-            def VolumnType(self):
+            def VolumeType(self):
                 return None
 
         def __init__(self, api_response):
@@ -279,7 +293,7 @@ class CfnEC2Instance(CfnAWSResource):
 
         @property
         def NoDevice(self):
-            pass
+            pass # only modifing using Cloudformation
 
         @property
         def VirtualName(self):
@@ -419,11 +433,12 @@ class CfnEC2Volume(CfnAWSResource):
 
     @property
     def Size(self):
-        return self._get_api_response('size')
+        return str(self._get_api_response('size'))
 
     @property
     def SnapshotId(self):
-        return self._get_api_response('snapshotId')
+        #return self._get_api_response('snapshotId')
+        pass
 
     @property
     def Tags(self):

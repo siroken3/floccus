@@ -20,6 +20,7 @@ class Former(object):
         stack = {"Resources":{}}
         self._form_vpc(stack)
         self._form_internet_gateway(stack)
+        self._form_eip(stack)
         self._form_subnets(stack)
         self._form_security_groups(stack)
         self._form_instances(stack)
@@ -57,14 +58,22 @@ class Former(object):
         self._add_resources(stack, cfn_internet_gateways)
         self._add_resources(stack, cfn_gateway_attachments)
 
+    def _form_eip(self, stack):
+        eips = []
+        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        op = self.ec2service.get_operation('DescribeAddresses')
+        code, data = op.call(ep)
+        for eip_data in data['addressesSet']:
+            eips.append(CfnEC2EIP(eip_data))
+        self._add_resources(stack, eips)
+
     def _form_subnets(self, stack):
         subnets = []
         ep = self.ec2service.get_endpoint('ap-northeast-1')
         op = self.ec2service.get_operation('DescribeSubnets')
         code, data = op.call(ep)
         for subnet_data in data['subnetSet']:
-            cfn_subnet = CfnEC2Subnet(subnet_data)
-            subnets.append(cfn_subnet)
+            subnets.append(CfnEC2Subnet(subnet_data))
         self._add_resources(stack, subnets)
 
     def _form_security_groups(self, stack):
