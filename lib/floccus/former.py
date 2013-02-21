@@ -89,8 +89,9 @@ class Former(object):
             route_tables.append(cfn_route_table)
             route_table_id = route_table_data['routeTableId']
             for route_data in route_table_data['routeSet']:
-                cfn_route = CfnEC2Route(route_data, route_table_id)
-                routes.append(cfn_route)
+                if route_data['origin'] == 'CreateRoute':
+                    cfn_route = CfnEC2Route(route_data, route_table_id)
+                    routes.append(cfn_route)
             for association_data in route_table_data['associationSet']:
                 cfn_route_table_association = CfnSubnetRouteTableAssociation(association_data, route_table_id)
                 subnet_route_table_association.append(cfn_route_table_association)
@@ -217,7 +218,6 @@ class Former(object):
                 code, role_policy = op.call(ep, role_name=role_name, policy_name=policy_name)
                 role_policy['Roles'] = role_names
                 policies.append(CfnIAMPolicy(role_policy))
-
 
         self._add_resources(stack, roles)
         self._add_resources(stack, policies)

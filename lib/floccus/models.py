@@ -85,7 +85,8 @@ class CfnInternetGateway(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+#        return self._get_api_response('tagSet')
+        pass # This is not operate, when the produced json file was used.
 
 
 class CfnInternetGatewayAttachment(CfnAWSResource):
