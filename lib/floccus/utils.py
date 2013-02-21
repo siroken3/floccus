@@ -8,6 +8,24 @@ import re
 def normalize_name(name):
     return re.sub(r'[/\-\._:]','', name)
 
+def capitalize_dict(a_dict):
+    return dict([ (k.capitalize(), v) for k, v in a_dict.items() ])
+
+def valid_cfn_tag(a_tag):
+    if not isinstance(a_tag, dict):
+        raise ValueError(message='a_tag is not dictionary. {s}'.format(type(a_tag)))
+
+    capitalized_tag = capitalize_dict(a_tag)
+    if 'Key' in capitalized_tag:
+        key = capitalized_tag['Key']
+    else:
+        raise ValueError(message='a_tag is invalid dictionary')
+
+    if key.startswith('aws:'):
+        return False
+
+    return True
+
 def flatten(orgdict, column):
     import copy
     pivot = orgdict[column]

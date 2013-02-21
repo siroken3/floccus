@@ -139,7 +139,7 @@ class CfnEC2Subnet(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
     @property
     def VpcId(self):
@@ -218,7 +218,7 @@ class CfnEC2RouteTable(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
 
 class CfnEC2NetworkInterface(CfnAWSResource):
@@ -251,7 +251,7 @@ class CfnEC2NetworkInterface(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
 class CfnEC2Instance(CfnAWSResource):
     class _CfnBlockDeviceMapping(CfnAWSDataType):
@@ -402,7 +402,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
     @property
     def Tenancy(self):
@@ -442,7 +442,7 @@ class CfnEC2Volume(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('tagSet')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
     @property
     def VolumnType(self):
@@ -632,7 +632,7 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
 
     @property
     def Tags(self):
-        return self._get_api_response('Tags')
+        return [utils.capitalize_dict(t) for t in self._get_api_response('tagSet') if utils.valid_cfn_tag(t)]
 
     @property
     def VPCZoneIdentifier(self):
@@ -758,5 +758,3 @@ class CfnIAMInstanceProfile(CfnAWSResource):
     @property
     def Roles(self):
         return [cfn_resourceref(r['RoleName']) for r in self._get_api_response('Roles')]
-
-

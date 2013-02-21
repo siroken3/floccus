@@ -99,3 +99,9 @@ def test_groupby_3():
         ]
     result = groupby(org, "ARN", "NRA")
     assert result == expect
+
+def test_capitalize_dict():
+    org = { "key": "keykey", "value": "valuevalue" }
+    expect = { "Key": "keykey", "Value": "valuevalue" }
+    result = capitalize_dict(org)
+    assert result == expect
