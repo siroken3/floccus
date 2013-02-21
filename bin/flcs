@@ -3,6 +3,5 @@
 import sys
 sys.path.insert(0, sys.path[0] + '/../lib')
 from floccus import cli
-#import floccus.cli
 
 cli.main()

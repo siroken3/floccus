@@ -9,7 +9,8 @@ from floccus.models import *
 
 class Former(object):
 
-    def __init__(self):
+    def __init__(self, region='us-east-1'):
+        self.region = region
         self.session = botocore.session.get_session()
         self.ec2service = self.session.get_service('ec2')
         self.autoscaling = self.session.get_service('autoscaling')
@@ -36,7 +37,7 @@ class Former(object):
         return stack
 
     def _form_vpc(self, stack):
-        endpoint = self.ec2service.get_endpoint('ap-northeast-1')
+        endpoint = self.ec2service.get_endpoint(self.region)
         operation = self.ec2service.get_operation('DescribeVpcs')
         code, data = operation.call(endpoint)
         vpcs = [CfnVpc(vpc) for vpc in data['vpcSet']]
@@ -44,7 +45,7 @@ class Former(object):
         return vpcs
 
     def _form_internet_gateway(self, stack):
-        endpoint = self.ec2service.get_endpoint('ap-northeast-1')
+        endpoint = self.ec2service.get_endpoint(self.region)
         operation = self.ec2service.get_operation('DescribeInternetGateways')
         code, data = operation.call(endpoint)
         cfn_internet_gateways = []
@@ -60,7 +61,7 @@ class Former(object):
 
     def _form_eip(self, stack):
         eips = []
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeAddresses')
         code, data = op.call(ep)
         for eip_data in data['addressesSet']:
@@ -69,7 +70,7 @@ class Former(object):
 
     def _form_subnets(self, stack):
         subnets = []
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeSubnets')
         code, data = op.call(ep)
         for subnet_data in data['subnetSet']:
@@ -78,7 +79,7 @@ class Former(object):
 
     def _form_security_groups(self, stack):
         security_groups = []
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeSecurityGroups')
         code, data = op.call(ep)
         for security_group_data in data['securityGroupInfo']:
@@ -87,7 +88,7 @@ class Former(object):
         self._add_resources(stack, security_groups)
 
     def _form_route_tables(self, stack):
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeRouteTables')
         code, data = op.call(ep)
         route_tables = []
@@ -110,7 +111,7 @@ class Former(object):
 
     def _form_network_interface(self, stack):
         network_interfaces = []
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeNetworkInterfaces')
         code, data = op.call(ep)
         for network_interface_data in data['networkInterfaceSet']:
@@ -118,7 +119,7 @@ class Former(object):
         self._add_resources(stack, network_interfaces)
 
     def _form_instances(self, stack):
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeInstances')
         code, data = op.call(ep)
         instances = []
@@ -128,7 +129,7 @@ class Former(object):
         self._add_resources(stack, instances)
 
     def _form_volume(self, stack):
-        ep = self.ec2service.get_endpoint('ap-northeast-1')
+        ep = self.ec2service.get_endpoint(self.region)
         op = self.ec2service.get_operation('DescribeVolumes')
         code, data = op.call(ep)
         volumes = []
@@ -142,7 +143,7 @@ class Former(object):
         self._add_resources(stack, volume_attachments)
 
     def _form_auto_scaling_group(self, stack):
-        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        ep = self.autoscaling.get_endpoint(self.region)
         op = self.autoscaling.get_operation('DescribeAutoScalingGroups')
         code, group_data = op.call(ep)
         op = self.autoscaling.get_operation('DescribeNotificationConfigurations')
@@ -154,7 +155,7 @@ class Former(object):
 
     def _form_auto_scaling_launch_configuration(self, stack):
         configurations = []
-        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        ep = self.autoscaling.get_endpoint(self.region)
         op = self.autoscaling.get_operation('DescribeLaunchConfigurations')
         code, data = op.call(ep)
         launch_configs = []
@@ -163,7 +164,7 @@ class Former(object):
         self._add_resources(stack, configurations)
 
     def _form_auto_scaling_policy(self, stack):
-        ep = self.autoscaling.get_endpoint('ap-northeast-1')
+        ep = self.autoscaling.get_endpoint(self.region)
         op = self.autoscaling.get_operation('DescribePolicies')
         code, data = op.call(ep)
         auto_scaling_policies = []
@@ -172,7 +173,7 @@ class Former(object):
         self._add_resources(stack, auto_scaling_policies)
 
     def _form_sns(self, stack):
-        ep = self.sns.get_endpoint('ap-northeast-1')
+        ep = self.sns.get_endpoint(self.region)
         op = self.sns.get_operation('ListTopics')
         code, topic_data = op.call(ep)
         op = self.sns.get_operation('ListSubscriptions')
