@@ -311,7 +311,7 @@ class CfnEC2Instance(CfnAWSResource):
         api_response = self._get_api_response('networkInterfaceSet')
         network_interfaces = [{
                 "NetworkInterfaceId": cfn_resourceref(eni['networkInterfaceId']),
-                "DeviceIndex" : eni['attachment']['deviceIndex']
+                "DeviceIndex" : str(eni['attachment']['deviceIndex'])
                 }
             for eni in api_response]
         return network_interfaces
@@ -340,7 +340,7 @@ class CfnEC2Instance(CfnAWSResource):
 
     @property
     def SourceDestCheck(self):
-        return self._get_api_response('sourceDestCheck')
+        return str(self._get_api_response('sourceDestCheck'))
 
     @property
     def SubnetId(self):

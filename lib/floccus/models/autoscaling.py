@@ -19,11 +19,11 @@ class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
 
     @property
     def ImageId(self):
-        return self._get_api_response('imageId')
+        return self._get_api_response('ImageId')
 
     @property
     def InstanceMonitoring(self):
-        return self._get_api_response('InstanceMonitoring')['Enabled']
+        return str(self._get_api_response('InstanceMonitoring')['Enabled'])
 
     @property
     def InstanceType(self):
@@ -38,7 +38,7 @@ class CfnAutoScalingLaunchConfiguration(CfnAWSResource):
         return self._get_api_response('KeyName')
 
     @property
-    def RamDiskId(self):
+    def RamdiskId(self):
         return self._get_api_response('RamdiskId')
 
     @property
@@ -117,6 +117,8 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
 
     @property
     def NotificationConfiguration(self):
+        if len(self._notification_configuration) == 0:
+            return None
         return self._notification_configuration
 
     @property
