@@ -7,7 +7,7 @@ from collections import OrderedDict
 import botocore.session
 
 import floccus.models as models
-from floccus.models import (ec2, autoscaling, sns, iam, rds)
+from floccus.models import (ec2, autoscaling, elasticloadbalancing, sns, iam, rds)
 
 class Former(object):
 
@@ -16,6 +16,7 @@ class Former(object):
         self.session = botocore.session.get_session()
         self.ec2service = self.session.get_service('ec2')
         self.autoscaling = self.session.get_service('autoscaling')
+        self.elb = self.session.get_service('elb')
         self.sns = self.session.get_service('sns')
         self.iam = self.session.get_service('iam')
 
@@ -27,6 +28,7 @@ class Former(object):
         self._form_subnets(stack)
         self._form_security_groups(stack)
         self._form_instances(stack)
+        self._form_elb(stack)
         self._form_volume(stack)
         self._form_route_tables(stack)
         self._form_network_interface(stack)
@@ -132,6 +134,12 @@ class Former(object):
             for instance_data in reservation['instancesSet']:
                 instances.append(ec2.CfnEC2Instance(instance_data))
         self._add_resources(stack, instances)
+
+    def _form_elb(self, stack):
+        ep = self.elb.get_endpoint(self.region)
+        op = self.elb.get_operation('DescribeLoadBalancers')
+        code, data = op.call(ep)
+        
 
     def _form_volume(self, stack):
         ep = self.ec2service.get_endpoint(self.region)

@@ -107,7 +107,7 @@ class CfnElasticLoadBalancingLoadBalancer(CfnAWSResource):
         CfnAWSResource.__init__(api_response, "AWS::ElasticLoadBalancing::LoadBalancer")
 
     def _cfn_id(self):
-        pass
+        return self._get_api_response('LoadBalancerName')
 
     @property
     def AppCookieStickinessPolicy(self):
@@ -115,7 +115,7 @@ class CfnElasticLoadBalancingLoadBalancer(CfnAWSResource):
 
     @property
     def AvailabilityZones(self):
-        pass
+        return self._get_api_response('AvailabilityZones')
 
     @property
     def HealthCheck(self):
@@ -123,7 +123,7 @@ class CfnElasticLoadBalancingLoadBalancer(CfnAWSResource):
 
     @property
     def Instances(self):
-        pass
+        return [ cfn_resourceref(i) for i in self._get_api_response('Instances') ]
 
     @property
     def LBCookieStickinessPoilcy(self):
@@ -139,7 +139,7 @@ class CfnElasticLoadBalancingLoadBalancer(CfnAWSResource):
 
     @property
     def Scheme(self):
-        pass
+        return self._get_api_response('Scheme')
 
     @property
     def SecurityGroups(self):
