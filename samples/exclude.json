@@ -15,6 +15,9 @@
         ],
         "AWS::EC2::Route": [
             "NetworkInterfaceId"
+        ],
+        "AWS::ElasticLoadBalancing::LoadBalancer": [
+            "Instances"
         ]
     }
 }

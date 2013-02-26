@@ -6,6 +6,7 @@ from collections import OrderedDict
 
 import botocore.session
 
+import floccus.utils as utils
 import floccus.models as models
 from floccus.models import (ec2, autoscaling, elasticloadbalancing, sns, iam, rds)
 
@@ -39,7 +40,7 @@ class Former(object):
         self._form_iam(stack)
 #        db_instances          = self._form_db_instance(stack)
 
-        stack['Resources'] = OrderedDict(stack['Resources'])
+        stack['Resources'] = OrderedDict(utils.sort_by_cfn_resource_type(stack['Resources']))
         return stack
 
     def _form_vpc(self, stack):
@@ -139,7 +140,10 @@ class Former(object):
         ep = self.elb.get_endpoint(self.region)
         op = self.elb.get_operation('DescribeLoadBalancers')
         code, data = op.call(ep)
-        
+        elbs = []
+        for elb in data['LoadBalancerDescriptions']:
+            elbs.append(elasticloadbalancing.CfnElasticLoadBalancingLoadBalancer(elb))
+        self._add_resources(stack, elbs)
 
     def _form_volume(self, stack):
         ep = self.ec2service.get_endpoint(self.region)

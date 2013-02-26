@@ -127,7 +127,7 @@ class CfnAutoScalingAutoScalingGroup(CfnAWSResource):
 
     @property
     def VPCZoneIdentifier(self):
-        return cfn_resourceref(self._get_api_response('VPCZoneIdentifier'))
+        return [cfn_resourceref(self._get_api_response('VPCZoneIdentifier'))]
 
 
 class CfnAutoScalingPolicy(CfnAWSResource):
