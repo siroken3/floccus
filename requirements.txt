@@ -5,3 +5,4 @@ python-dateutil==2.1
 requests==0.14.1
 six==1.2.0
 wsgiref==0.1.2
+ordereddict==1.1
