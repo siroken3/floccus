@@ -9,7 +9,7 @@ class CfnIAMRole(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::Role")
 
     def _cfn_id(self):
-        return self._get_api_response('RoleName')
+        return self._get_api_response('RoleName') + "Role"
 
     @property
     def AssumeRolePolicyDocument(self):
@@ -29,7 +29,7 @@ class CfnIAMPolicy(CfnAWSResource):
         CfnAWSResource.__init__(self, api_response, "AWS::IAM::Policy")
 
     def _cfn_id(self):
-        return self._get_api_response('PolicyName')
+        return self._get_api_response('PolicyName') + "Policy"
 
     @property
     def Groups(self):
@@ -46,7 +46,7 @@ class CfnIAMPolicy(CfnAWSResource):
 
     @property
     def Roles(self):
-        return [cfn_resourceref(r) for r in self._get_api_response('Roles')]
+        return [cfn_resourceref(r + "Role") for r in self._get_api_response('Roles')]
 
     @property
     def Users(self):
@@ -65,4 +65,4 @@ class CfnIAMInstanceProfile(CfnAWSResource):
 
     @property
     def Roles(self):
-        return [cfn_resourceref(r['RoleName']) for r in self._get_api_response('Roles')]
+        return [cfn_resourceref(r['RoleName'] + "Role") for r in self._get_api_response('Roles')]
