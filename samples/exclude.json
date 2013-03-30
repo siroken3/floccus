@@ -1,0 +1,23 @@
+{
+    "Type": {
+        "AWS::EC2::Volume": [
+            "*"
+        ],
+        "AWS::EC2::VolumeAttachment": [
+            "*"
+        ],
+        "AWS::EC2::NetworkInterface": [
+            "*"
+        ],
+        "AWS::EC2::Instance": [
+            "BlockDeviceMappings",
+            "NetworkInterfaces"
+        ],
+        "AWS::EC2::Route": [
+            "NetworkInterfaceId"
+        ],
+        "AWS::ElasticLoadBalancing::LoadBalancer": [
+            "Instances"
+        ]
+    }
+}

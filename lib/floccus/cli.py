@@ -2,24 +2,32 @@
 
 import os
 import sys
+import json
 import argparse
+import ConfigParser
 
-from former import CloudFormer
-import utils
-import template
+import floccus.former
+import floccus.dumper
+from floccus.models import load_exclude_pattern
+
+config = ConfigParser.SafeConfigParser()
 
 def main():
-# parse arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--region', default='us-east-1')
-    parser.add_argument('-O','--aws-access-key', default=None)
-    parser.add_argument('-W','--aws-secret-key', default=None)
-    parsed = parser.parse_args()
-    access_key, secret_key = utils.get_aws_key(parsed.aws_access_key, parsed.aws_secret_key)
+    parser = argparse.ArgumentParser(description='Outputs cloudFormation template json.')
+    parser.add_argument('--region', dest='region', action='store', default='us-east-1', help='target AWS region. (default:us-east-1)')
+    parser.add_argument('--config', dest='config', action='store', default='flcs.conf', help='configuration for output json files (default: flcs.conf)')
+    args = parser.parse_args()
+
+# prepare exclude pattern
+    if args.config is not None:
+        config.readfp(open(args.config))
 
 # do form
-    former = CloudFormer(access_key=access_key, secret_key=secret_key, region_name=parsed.region)
-    model = former.form()
+    for section in config.sections():
+        load_exclude_pattern(config.get(section, 'exclude_from'))
+        former = floccus.former.Former(region=args.region)
+        model = former.form()
 
 # output
-    print template.output(model)
+        outfile = config.get(section, 'outfile')
+        floccus.dumper.output(model, outfile=outfile)
